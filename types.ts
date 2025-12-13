@@ -20,6 +20,10 @@ export interface User {
   mobileNumber?: string;
   board?: string;
   schoolCode?: string;
+  location?: string;
+  counsellorEmail?: string;
+  createdAt?: any;
+  status?: string;
 }
 
 export interface Milestone {
