@@ -1,0 +1,70 @@
+import { Milestone, AssessmentData } from './types';
+
+export const MILESTONES: Milestone[] = [
+  { id: 'm1', title: 'Career Analysis for 2nd to 7th class', iconName: 'School' },
+  { id: 'm2', title: 'Career Analysis for 8th, 9th & 10th Class', iconName: 'Map' },
+  { id: 'm3', title: 'Career Analysis for 11th & 12th Class', iconName: 'Compass' },
+  { id: 'm4', title: 'Career Analysis for Graduates', iconName: 'GraduationCap' },
+];
+
+export const SAMPLE_ASSESSMENT: AssessmentData = {
+  milestoneId: 'm3', 
+  sections: [
+    {
+      id: 'sec_activities',
+      title: 'ACTIVITY STATEMENTS',
+      questions: [
+        { id: 'q_1', text: 'I enjoy researching or exploring new topics.', type: 'scale_0_4' },
+        { id: 'q_2', text: 'I like caring for or supporting people.', type: 'scale_0_4' },
+        { id: 'q_3', text: 'I enjoy creating designs or artworks on a computer or mobile app.', type: 'scale_0_4' },
+        { id: 'q_4', text: 'I enjoy discussing topics like money, business, or marketing.', type: 'scale_0_4' },
+        { id: 'q_5', text: 'I like solving practical problems using logic.', type: 'scale_0_4' },
+        { id: 'q_6', text: 'I enjoy taking photos or editing images.', type: 'scale_0_4' },
+        { id: 'q_7', text: 'I enjoy helping people with their problems.', type: 'scale_0_4' },
+        { id: 'q_8', text: 'I like arranging things in order, like alphabetically or by size.', type: 'scale_0_4' },
+        { id: 'q_9', text: 'I enjoy building models or doing DIY projects.', type: 'scale_0_4' },
+        { id: 'q_10', text: 'I like participating in voluntary or community work.', type: 'scale_0_4' },
+        { id: 'q_11', text: 'I like working with numbers and data.', type: 'scale_0_4' },
+        { id: 'q_12', text: 'I enjoy understanding how and why things happen.', type: 'scale_0_4' },
+        { id: 'q_13', text: 'I like convincing or influencing people.', type: 'scale_0_4' },
+        { id: 'q_14', text: 'I like tasks that have clear rules and instructions.', type: 'scale_0_4' },
+        { id: 'q_15', text: 'I enjoy writing stories, poems, or scripts.', type: 'scale_0_4' },
+        { id: 'q_16', text: 'I enjoy analysing problems to find solutions.', type: 'scale_0_4' },
+        { id: 'q_17', text: 'I like planning events, competitions, or programs.', type: 'scale_0_4' },
+        { id: 'q_18', text: 'I enjoy working with tools, machines, or equipment.', type: 'scale_0_4' },
+        { id: 'q_19', text: 'I enjoy choosing colors, fonts, or layouts for projects.', type: 'scale_0_4' },
+        { id: 'q_20', text: 'I like listening to people and understanding their feelings.', type: 'scale_0_4' },
+        { id: 'q_21', text: 'I like tasks that require neatness and accuracy.', type: 'scale_0_4' },
+        { id: 'q_22', text: 'I enjoy experiments involving machines or materials.', type: 'scale_0_4' },
+        { id: 'q_23', text: 'I enjoy speaking in front of audiences.', type: 'scale_0_4' },
+        { id: 'q_24', text: 'I enjoy drawing, painting, or making artwork.', type: 'scale_0_4' },
+        { id: 'q_25', text: 'I enjoy solving challenging questions or puzzles.', type: 'scale_0_4' },
+        { id: 'q_26', text: 'I enjoy expressing ideas through art or media.', type: 'scale_0_4' },
+        { id: 'q_27', text: 'I like helping people make decisions.', type: 'scale_0_4' },
+        { id: 'q_28', text: 'I enjoy doing science experiments.', type: 'scale_0_4' },
+        { id: 'q_29', text: 'I enjoy working in groups.', type: 'scale_0_4' },
+        { id: 'q_30', text: 'I enjoy assembling or setting up devices and gadgets.', type: 'scale_0_4' },
+        { id: 'q_31', text: 'I like organizing files, books, or materials.', type: 'scale_0_4' },
+        { id: 'q_32', text: 'I enjoy taking charge of group activities.', type: 'scale_0_4' },
+        { id: 'q_33', text: 'I prefer assignments that allow creativity rather than strict rules.', type: 'scale_0_4' },
+        { id: 'q_34', text: 'I enjoy reading factual or scientific information.', type: 'scale_0_4' },
+        { id: 'q_35', text: 'I like fixing things or figuring out how they work.', type: 'scale_0_4' },
+        { id: 'q_36', text: 'I enjoy acting, dancing, or performing on stage.', type: 'scale_0_4' },
+        { id: 'q_37', text: 'I enjoy finding patterns or connections in information.', type: 'scale_0_4' },
+        { id: 'q_38', text: 'I enjoy creating posters, videos, or digital designs.', type: 'scale_0_4' },
+        { id: 'q_39', text: 'I enjoy caring for or motivating people.', type: 'scale_0_4' },
+        { id: 'q_40', text: 'I like selling, promoting, or presenting something.', type: 'scale_0_4' },
+        { id: 'q_41', text: 'I enjoy subjects like Maths and Physics.', type: 'scale_0_4' },
+        { id: 'q_42', text: 'I want to run my own business someday.', type: 'scale_0_4' },
+        { id: 'q_43', text: 'I enjoy decorating spaces or arranging things creatively.', type: 'scale_0_4' },
+        { id: 'q_44', text: 'I enjoy understanding people’s emotions and reactions.', type: 'scale_0_4' },
+        { id: 'q_45', text: 'I enjoy writing or typing and arranging information.', type: 'scale_0_4' },
+        { id: 'q_46', text: 'I am interested in engineering, mechanics, or electronics.', type: 'scale_0_4' },
+        { id: 'q_47', text: 'I enjoy coming up with new ideas to improve things.', type: 'scale_0_4' },
+        { id: 'q_48', text: 'I enjoy choosing creative ways to present information.', type: 'scale_0_4' },
+        { id: 'q_49', text: 'I enjoy teaching or explaining things to others.', type: 'scale_0_4' },
+        { id: 'q_50', text: 'I like working on practical, hands-on tasks.', type: 'scale_0_4' },
+      ]
+    }
+  ]
+};
