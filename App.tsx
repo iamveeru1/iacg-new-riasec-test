@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, ViewState, AssessmentData, UserAnswers } from './types';
 import { SAMPLE_ASSESSMENT } from './constants';
 import StudentInputScreen from './components/Auth/StudentInputScreen';
@@ -6,10 +6,21 @@ import TestScreen from './components/Assessment/TestScreen';
 import SubmissionSuccessScreen from './components/Assessment/SubmissionSuccessScreen';
 import Header from './components/Layout/Header';
 
-import { db } from './utils/firebase';
+import { db, auth } from './utils/firebase';
 import { collection, addDoc, doc, updateDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+import { signInAnonymously } from "firebase/auth";
 
 function App() {
+  useEffect(() => {
+    signInAnonymously(auth)
+      .then(() => {
+        console.log("Signed in anonymously");
+      })
+      .catch((error) => {
+        console.error("Error signing in anonymously:", error);
+      });
+  }, []);
+
   const [user, setUser] = useState<User | null>(null);
   // Default to Student Details View
   const [currentView, setCurrentView] = useState<ViewState>(ViewState.STUDENT_DETAILS);

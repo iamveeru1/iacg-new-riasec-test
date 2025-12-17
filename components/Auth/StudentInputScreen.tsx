@@ -13,8 +13,7 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
   const [name, setName] = useState('');
   const [grade, setGrade] = useState('');
 
-  // Conditional Fields
-  const [acceptDetails, setAcceptDetails] = useState(false);
+  // Student Details
   const [parentName, setParentName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -36,22 +35,14 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
     const uCode = searchParams.get('uniqueCode');
     const cEmail = searchParams.get('email');
     const sBoard = searchParams.get('board');
-    const sCollectDetails = searchParams.get('collectDetails');
 
     if (sName) setSchoolName(sName);
     if (uCode) setUniqueCode(uCode);
     if (cEmail) setCounsellorEmail(cEmail);
     if (sBoard) setBoard(sBoard);
 
-    // Check for collectDetails param
-    if (sCollectDetails && sCollectDetails.toLowerCase() === 'yes') {
-      setAcceptDetails(true);
-    } else {
-      setAcceptDetails(false);
-    }
-
     // Debug log to ensure params are captured
-    console.log("Params captured:", { sName, uCode, cEmail, sBoard, sCollectDetails });
+    console.log("Params captured:", { sName, uCode, cEmail, sBoard });
   }, []);
 
   const validate = (): boolean => {
@@ -77,30 +68,28 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
       isValid = false;
     }
 
-    // Conditional Validation
-    if (acceptDetails) {
-      if (!parentName.trim()) {
-        newErrors.parentName = "Parent Name is required";
-        isValid = false;
-      }
-      if (!phone.trim()) {
-        newErrors.phone = "Phone is required";
-        isValid = false;
-      } else if (!/^\d{10}$/.test(phone.replace(/\D/g, ''))) {
-        newErrors.phone = "Enter valid 10-digit number";
-        isValid = false;
-      }
-      if (!email.trim()) {
-        newErrors.email = "Email is required";
-        isValid = false;
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        newErrors.email = "Invalid email format";
-        isValid = false;
-      }
-      if (!location.trim()) {
-        newErrors.location = "Location is required";
-        isValid = false;
-      }
+    // Additional Details Validation
+    if (!parentName.trim()) {
+      newErrors.parentName = "Parent Name is required";
+      isValid = false;
+    }
+    if (!phone.trim()) {
+      newErrors.phone = "Phone is required";
+      isValid = false;
+    } else if (!/^\d{10}$/.test(phone.replace(/\D/g, ''))) {
+      newErrors.phone = "Enter valid 10-digit number";
+      isValid = false;
+    }
+    if (!email.trim()) {
+      newErrors.email = "Email is required";
+      isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = "Invalid email format";
+      isValid = false;
+    }
+    if (!location.trim()) {
+      newErrors.location = "Location is required";
+      isValid = false;
     }
 
     setErrors(newErrors);
@@ -119,13 +108,11 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
         schoolCode: uniqueCode || 'N/A',
         counsellorEmail: counsellorEmail,
         board: board,
-        // Conditional
-        ...(acceptDetails && {
-          parentName: parentName.trim(),
-          mobileNumber: phone.trim(),
-          email: email.trim(),
-          location: location.trim(),
-        })
+        // Additional Details
+        parentName: parentName.trim(),
+        mobileNumber: phone.trim(),
+        email: email.trim(),
+        location: location.trim(),
       };
       console.log("Submitting user:", user);
       onSubmit(user);
@@ -247,74 +234,72 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
               {getError('grade') && <p className="text-[10px] text-red-500 font-bold">{getError('grade')}</p>}
             </div>
 
-            {/* Conditional Fields */}
-            {acceptDetails && (
-              <div className="space-y-4 animate-fade-in">
-                {/* Parent Name */}
-                <div className="space-y-1">
-                  <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wide">
-                    <UserIcon size={14} className="text-brand-navy" />
-                    Parent Name
-                  </label>
-                  <input
-                    type="text"
-                    value={parentName}
-                    onChange={(e) => setParentName(e.target.value)}
-                    className={`w-full px-3 py-2.5 bg-white border rounded-lg text-sm ${getError('parentName') ? 'border-red-500' : 'border-gray-300 focus:border-brand-navy focus:ring-1 focus:ring-brand-navy/20'}`}
-                    placeholder="Parent Name"
-                  />
-                  {getError('parentName') && <p className="text-[10px] text-red-500 font-bold">{getError('parentName')}</p>}
-                </div>
-
-                {/* Phone */}
-                <div className="space-y-1">
-                  <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wide">
-                    <Phone size={14} className="text-brand-navy" />
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className={`w-full px-3 py-2.5 bg-white border rounded-lg text-sm ${getError('phone') ? 'border-red-500' : 'border-gray-300 focus:border-brand-navy focus:ring-1 focus:ring-brand-navy/20'}`}
-                    placeholder="10-digit Mobile Number"
-                  />
-                  {getError('phone') && <p className="text-[10px] text-red-500 font-bold">{getError('phone')}</p>}
-                </div>
-
-                {/* Email */}
-                <div className="space-y-1">
-                  <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wide">
-                    <Mail size={14} className="text-brand-navy" />
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className={`w-full px-3 py-2.5 bg-white border rounded-lg text-sm ${getError('email') ? 'border-red-500' : 'border-gray-300 focus:border-brand-navy focus:ring-1 focus:ring-brand-navy/20'}`}
-                    placeholder="email@example.com"
-                  />
-                  {getError('email') && <p className="text-[10px] text-red-500 font-bold">{getError('email')}</p>}
-                </div>
-
-                {/* Location */}
-                <div className="space-y-1">
-                  <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wide">
-                    <MapPin size={14} className="text-brand-navy" />
-                    Location
-                  </label>
-                  <input
-                    type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    className={`w-full px-3 py-2.5 bg-white border rounded-lg text-sm ${getError('location') ? 'border-red-500' : 'border-gray-300 focus:border-brand-navy focus:ring-1 focus:ring-brand-navy/20'}`}
-                    placeholder="City, State"
-                  />
-                  {getError('location') && <p className="text-[10px] text-red-500 font-bold">{getError('location')}</p>}
-                </div>
+            {/* Additional Details Fields */}
+            <div className="space-y-4 animate-fade-in">
+              {/* Parent Name */}
+              <div className="space-y-1">
+                <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wide">
+                  <UserIcon size={14} className="text-brand-navy" />
+                  Parent Name
+                </label>
+                <input
+                  type="text"
+                  value={parentName}
+                  onChange={(e) => setParentName(e.target.value)}
+                  className={`w-full px-3 py-2.5 bg-white border rounded-lg text-sm ${getError('parentName') ? 'border-red-500' : 'border-gray-300 focus:border-brand-navy focus:ring-1 focus:ring-brand-navy/20'}`}
+                  placeholder="Parent Name"
+                />
+                {getError('parentName') && <p className="text-[10px] text-red-500 font-bold">{getError('parentName')}</p>}
               </div>
-            )}
+
+              {/* Phone */}
+              <div className="space-y-1">
+                <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wide">
+                  <Phone size={14} className="text-brand-navy" />
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className={`w-full px-3 py-2.5 bg-white border rounded-lg text-sm ${getError('phone') ? 'border-red-500' : 'border-gray-300 focus:border-brand-navy focus:ring-1 focus:ring-brand-navy/20'}`}
+                  placeholder="10-digit Mobile Number"
+                />
+                {getError('phone') && <p className="text-[10px] text-red-500 font-bold">{getError('phone')}</p>}
+              </div>
+
+              {/* Email */}
+              <div className="space-y-1">
+                <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wide">
+                  <Mail size={14} className="text-brand-navy" />
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={`w-full px-3 py-2.5 bg-white border rounded-lg text-sm ${getError('email') ? 'border-red-500' : 'border-gray-300 focus:border-brand-navy focus:ring-1 focus:ring-brand-navy/20'}`}
+                  placeholder="email@example.com"
+                />
+                {getError('email') && <p className="text-[10px] text-red-500 font-bold">{getError('email')}</p>}
+              </div>
+
+              {/* Location */}
+              <div className="space-y-1">
+                <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wide">
+                  <MapPin size={14} className="text-brand-navy" />
+                  Location
+                </label>
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className={`w-full px-3 py-2.5 bg-white border rounded-lg text-sm ${getError('location') ? 'border-red-500' : 'border-gray-300 focus:border-brand-navy focus:ring-1 focus:ring-brand-navy/20'}`}
+                  placeholder="City, State"
+                />
+                {getError('location') && <p className="text-[10px] text-red-500 font-bold">{getError('location')}</p>}
+              </div>
+            </div>
 
             <div className="pt-4">
               <button
