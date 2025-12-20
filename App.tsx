@@ -8,17 +8,24 @@ import Header from './components/Layout/Header';
 
 import { db, auth } from './utils/firebase';
 import { collection, addDoc, doc, updateDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
-import { signInAnonymously } from "firebase/auth";
+import { signInAnonymously, onAuthStateChanged } from "firebase/auth";
 
 function App() {
   useEffect(() => {
-    signInAnonymously(auth)
-      .then(() => {
-        console.log("Signed in anonymously");
-      })
-      .catch((error) => {
-        console.error("Error signing in anonymously:", error);
-      });
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        try {
+          await signInAnonymously(auth);
+          console.log("Signed in anonymously");
+        } catch (error) {
+          console.error("Error signing in anonymously:", error);
+        }
+      } else {
+        console.log("User already signed in:", user.uid);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const [user, setUser] = useState<User | null>(null);
