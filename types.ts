@@ -38,7 +38,9 @@ export interface Question {
   subheading?: string;
   text: string;
   options?: string[];
-  type: 'radio' | 'likert' | 'rating' | 'text' | 'checkbox' | 'textarea' | 'scale_0_4';
+  type: 'radio' | 'likert' | 'rating' | 'text' | 'checkbox' | 'textarea' | 'scale_0_4' | 'mcq';
+  correctAnswer?: string;  // For MCQ: the correct option text
+  explanation?: string;    // For MCQ: explanation shown after answering
 }
 
 export interface Section {

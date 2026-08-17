@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, ViewState, AssessmentData, UserAnswers } from './types';
-import { SAMPLE_ASSESSMENT } from './constants';
+import { buildMCQAssessment } from './data/mcq_questions';
 import StudentInputScreen from './components/Auth/StudentInputScreen';
 import TestScreen from './components/Assessment/TestScreen';
 import SubmissionSuccessScreen from './components/Assessment/SubmissionSuccessScreen';
@@ -12,20 +12,29 @@ import { signInAnonymously, onAuthStateChanged } from "firebase/auth";
 
 function App() {
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        try {
-          await signInAnonymously(auth);
-          console.log("Signed in anonymously");
-        } catch (error) {
-          console.error("Error signing in anonymously:", error);
+    let unsubscribe = () => {};
+    try {
+      unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          try {
+            await signInAnonymously(auth);
+            console.log("Signed in anonymously");
+          } catch (error) {
+            console.warn("Anonymous sign-in skipped (static mode):", error);
+          }
+        } else {
+          console.log("User already signed in:", user.uid);
         }
-      } else {
-        console.log("User already signed in:", user.uid);
-      }
-    });
+      });
+    } catch (err) {
+      console.warn("Auth state observer skipped (static mode):", err);
+    }
 
-    return () => unsubscribe();
+    return () => {
+      try {
+        unsubscribe();
+      } catch (e) {}
+    };
   }, []);
 
   const [user, setUser] = useState<User | null>(null);
@@ -42,29 +51,25 @@ function App() {
     setIsLoading(true);
     setServerErrors({}); // Clear previous errors
 
+    const staticUserId = `student_${Date.now()}`;
+    let userWithId: User = { ...studentUser, id: staticUserId };
+
     try {
+      // Optional Firebase sync if available
       const studentsRef = collection(db, "students");
-
-      // 1. Save student details to Firestore 'students' collection (Checks removed as fields are removed)
-
-      // 1. Save student details to Firestore 'students' collection
       const docRef = await addDoc(studentsRef, {
         ...studentUser,
         status: 'REGISTERED',
         createdAt: serverTimestamp(),
       });
-
-      // 2. Attach the generated ID to the user object
-      const userWithId = { ...studentUser, id: docRef.id };
-      setUser(userWithId);
-
-      // 3. Direct flow: Load sample assessment and go to Assessment view (starts with Instructions)
-      setAssessmentData(SAMPLE_ASSESSMENT);
-      setCurrentView(ViewState.ASSESSMENT);
+      userWithId = { ...studentUser, id: docRef.id };
     } catch (error) {
-      console.error("Error saving student details:", error);
-      alert("There was an error saving your details. Please check your connection and try again.");
+      console.warn("Firebase save skipped/failed (continuing with static user):", error);
     } finally {
+      setUser(userWithId);
+      // Randomly pick 20 questions from the 50-question MCQ bank for this student
+      setAssessmentData(buildMCQAssessment(20));
+      setCurrentView(ViewState.ASSESSMENT);
       setIsLoading(false);
     }
   };
@@ -78,29 +83,22 @@ function App() {
   };
 
   const completeTest = async (answers: UserAnswers) => {
-    if (!user?.id) {
-      console.error("No user ID found, cannot save results.");
-      return;
-    }
-
     setIsLoading(true);
     try {
-      // 1. Update the existing student document with answers and completion status
-      const studentRef = doc(db, "students", user.id);
-
-      await updateDoc(studentRef, {
-        answers: answers,
-        status: 'COMPLETED',
-        completedAt: serverTimestamp()
-      });
-
+      if (user?.id) {
+        const studentRef = doc(db, "students", user.id);
+        await updateDoc(studentRef, {
+          answers: answers,
+          status: 'COMPLETED',
+          completedAt: serverTimestamp()
+        });
+      }
+    } catch (error) {
+      console.warn("Firebase update skipped/failed (submitting locally):", error);
+    } finally {
       setUserAnswers(answers);
       setCurrentView(ViewState.SUCCESS);
       window.scrollTo(0, 0);
-    } catch (error) {
-      console.error("Error submitting test:", error);
-      alert("Failed to submit test. Please try again.");
-    } finally {
       setIsLoading(false);
     }
   };

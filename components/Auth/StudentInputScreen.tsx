@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
-import { UserCircle, School, ArrowRight, Loader2, MapPin, Phone, Mail, User as UserIcon } from 'lucide-react';
+import { UserCircle, Mail, ArrowRight, Loader2, Compass, CheckCircle2, Sparkles, Palette, Activity, Briefcase } from 'lucide-react';
 
 interface StudentInputScreenProps {
   onSubmit: (user: User) => void;
@@ -8,16 +8,33 @@ interface StudentInputScreenProps {
   serverErrors?: { [key: string]: string };
 }
 
-const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoading = false, serverErrors = {} }) => {
-  // Core Fields
-  const [name, setName] = useState('');
-  const [grade, setGrade] = useState('');
+const DOMAIN_PILLARS = [
+  {
+    icon: Sparkles,
+    title: "Computer Science, AI & Engineering",
+    desc: "AI, AR/VR, Space Tech, Computing, IT & Core Engineering"
+  },
+  {
+    icon: Palette,
+    title: "Digital Media, Animation & Design",
+    desc: "Animation, Visual Communication, Gaming & Creator Media"
+  },
+  {
+    icon: Activity,
+    title: "Healthcare, Sciences & Environment",
+    desc: "Medical Sciences, Pharma, Health & Applied Sciences"
+  },
+  {
+    icon: Briefcase,
+    title: "Business, Law & Social Studies",
+    desc: "Commerce, Social Sciences, Management & Public Administration"
+  }
+];
 
-  // Student Details
-  const [parentName, setParentName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [location, setLocation] = useState('');
+const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoading = false, serverErrors = {} }) => {
+  // Candidate Details (Name & Email)
+  const [name, setName] = useState('Demo Student');
+  const [email, setEmail] = useState('student@example.com');
 
   // Hidden/URL Params
   const [schoolName, setSchoolName] = useState('');
@@ -41,161 +58,154 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
     if (cEmail) setCounsellorEmail(cEmail);
     if (sBoard) setBoard(sBoard);
 
-    // Debug log to ensure params are captured
     console.log("Params captured:", { sName, uCode, cEmail, sBoard });
   }, []);
-
-  const validate = (): boolean => {
-    const newErrors: { [key: string]: string } = {};
-    let isValid = true;
-
-    // Student Name
-    const nameRegex = /^[a-zA-Z\s]*$/;
-    if (!name.trim()) {
-      newErrors.name = "Student Name is required";
-      isValid = false;
-    } else if (name.trim().length < 2) {
-      newErrors.name = "Min 2 characters";
-      isValid = false;
-    } else if (!nameRegex.test(name)) {
-      newErrors.name = "Letters only";
-      isValid = false;
-    }
-
-    // Grade
-    if (!grade.trim()) {
-      newErrors.grade = "Grade is required";
-      isValid = false;
-    }
-
-    // Additional Details Validation
-    if (!parentName.trim()) {
-      newErrors.parentName = "Parent Name is required";
-      isValid = false;
-    }
-    if (!phone.trim()) {
-      newErrors.phone = "Phone is required";
-      isValid = false;
-    } else if (!/^\d{10}$/.test(phone.replace(/\D/g, ''))) {
-      newErrors.phone = "Enter valid 10-digit number";
-      isValid = false;
-    }
-    if (!email.trim()) {
-      newErrors.email = "Email is required";
-      isValid = false;
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = "Invalid email format";
-      isValid = false;
-    }
-    if (!location.trim()) {
-      newErrors.location = "Location is required";
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-    return isValid;
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isLoading) return;
 
-    if (validate()) {
-      const user: User = {
-        name: name.trim(),
-        studentClass: grade.trim(),
-        school: schoolName || 'Unknown School', // Default if not provided
-        schoolCode: uniqueCode || 'N/A',
-        counsellorEmail: counsellorEmail,
-        board: board,
-        // Additional Details
-        parentName: parentName.trim(),
-        mobileNumber: phone.trim(),
-        email: email.trim(),
-        location: location.trim(),
-      };
-      console.log("Submitting user:", user);
-      onSubmit(user);
-    }
+    // Build user object with candidate details
+    const user: User = {
+      name: name.trim() || 'Demo Student',
+      email: email.trim() || 'student@example.com',
+      studentClass: 'Grade 10',
+      school: schoolName || 'IACG International',
+      schoolCode: uniqueCode || 'N/A',
+      counsellorEmail: counsellorEmail,
+      board: board || 'CBSE',
+      parentName: 'Parent',
+      mobileNumber: '9876543210',
+      location: 'Hyderabad',
+    };
+    console.log("Submitting candidate for MCQ test:", user);
+    onSubmit(user);
   };
 
   const getError = (field: string) => errors[field] || serverErrors[field];
 
   return (
     <div className="min-h-screen flex w-full bg-white relative">
-      {/* Left Side (Desktop) / Welcome Screen (Mobile) */}
+      {/* Left Side (Desktop) / Test Overview (Mobile) */}
       <div className={`
           ${showMobileForm ? 'hidden md:flex' : 'flex'} 
           w-full md:w-1/2 relative overflow-hidden bg-brand-navy min-h-screen md:min-h-auto transition-all duration-500
       `}>
+        {/* Dynamic Background Image */}
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-60 mix-blend-overlay"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2070&auto=format&fit=crop')" }}
+          className="absolute inset-0 bg-cover bg-center opacity-25 mix-blend-luminosity scale-105 transition-transform duration-1000"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=2070&auto=format&fit=crop')" }}
         />
-        <div className="relative z-10 flex flex-col h-full w-full p-8 md:p-12 lg:p-16 text-white justify-between">
-          {/* Top Section: Logo + Text */}
-          <div className="flex-1 flex flex-col items-center md:items-start pt-4 md:pt-0">
+
+        {/* Ambient Gradient Glows */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-gold/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col h-full w-full p-6 md:p-10 lg:p-12 text-white justify-between">
+          {/* Top Section: Logo + MCQ Overview Content */}
+          <div className="flex-1 flex flex-col items-center md:items-start pt-2 md:pt-0">
             {/* Logo */}
-            <div className="mb-6 md:mb-8">
+            <div className="mb-4 md:mb-6">
               <img
                 src="/logo.png"
                 alt="IACG Multimedia College"
-                className="h-16 w-auto object-contain bg-white p-2 rounded-md"
+                className="h-14 w-auto object-contain bg-white p-2 rounded-md shadow-md"
               />
             </div>
 
-            {/* Text Content */}
-            <div className="text-center md:text-left">
-              <h2 className="text-4xl lg:text-5xl font-bold mb-4 leading-tight">Student Career Analysis</h2>
-              <p className="text-base lg:text-lg text-gray-200 max-w-md leading-relaxed">
-                Enter your details to begin the psychometric assessment. This tool will help identify your strengths and interests.
+            {/* MCQ Assessment Heading & Description */}
+            <div className="w-full text-center md:text-left">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-gold/20 text-brand-gold text-xs font-semibold uppercase tracking-wider mb-3">
+                <Compass size={14} />
+                Online MCQ Examination
+              </div>
+
+              <h2 className="text-2xl lg:text-4xl font-bold mb-3 leading-tight text-white tracking-tight">
+                Multi-Disciplinary MCQ Assessment
+              </h2>
+              <p className="text-xs lg:text-sm text-gray-200 mb-6 max-w-xl leading-relaxed">
+                Test your knowledge, conceptual clarity, and objective reasoning across 22 comprehensive multidisciplinary subject modules:
               </p>
+
+              {/* 4 Representative Subject Clusters */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left mb-6">
+                {DOMAIN_PILLARS.map((pillar, idx) => {
+                  const Icon = pillar.icon;
+                  return (
+                    <div
+                      key={idx}
+                      className="p-3 rounded-xl bg-white/[0.07] hover:bg-white/[0.12] backdrop-blur-md border border-white/10 transition-all duration-300 group shadow-sm"
+                    >
+                      <div className="flex items-center gap-2.5 mb-1">
+                        <div className="w-7 h-7 rounded-lg bg-brand-gold/20 text-brand-gold flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                          <Icon size={16} />
+                        </div>
+                        <h4 className="font-bold text-xs text-white leading-tight">{pillar.title}</h4>
+                      </div>
+                      <p className="text-[11px] text-gray-300 pl-9 leading-relaxed">{pillar.desc}</p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Key Features Badges */}
+              <div className="flex flex-wrap items-center gap-3 pt-2 justify-center md:justify-start">
+                <div className="flex items-center gap-1.5 text-xs text-gray-300 bg-black/20 px-3 py-1.5 rounded-lg border border-white/5">
+                  <CheckCircle2 size={13} className="text-brand-gold" />
+                  <span>22 MCQ Question Modules</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-gray-300 bg-black/20 px-3 py-1.5 rounded-lg border border-white/5">
+                  <CheckCircle2 size={13} className="text-brand-gold" />
+                  <span>Objective Multiple Choice Format</span>
+                </div>
+              </div>
 
               <button
                 onClick={() => setShowMobileForm(true)}
-                className="md:hidden bg-brand-gold text-brand-navy px-8 py-3.5 rounded-full font-bold uppercase tracking-widest shadow-lg hover:bg-white transition-all transform active:scale-95 flex items-center gap-2 mt-8 animate-pulse mx-auto md:mx-0"
+                className="md:hidden bg-brand-gold text-brand-navy px-8 py-3 rounded-full font-bold uppercase tracking-widest shadow-lg hover:bg-white transition-all transform active:scale-95 flex items-center gap-2 mt-6 mx-auto"
               >
-                Get Started
-                <ArrowRight size={20} />
+                Start Test
+                <ArrowRight size={18} />
               </button>
             </div>
           </div>
 
-          <div className="flex-none flex gap-2 opacity-70 justify-center md:justify-start pb-4 md:pb-0">
-            {schoolName && (
-              <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg border border-white/20">
-                <p className="text-xs uppercase tracking-wider text-gray-300">Taking test for</p>
-                <div className="flex flex-col">
-                  <p className="font-bold text-xl">{schoolName}</p>
-                  {board && <p className="text-sm font-medium text-brand-gold">{board} Board</p>}
+          {/* School / Institution Banner if present */}
+          {schoolName && (
+            <div className="flex-none pt-4 opacity-90 justify-center md:justify-start">
+              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20 inline-flex flex-col">
+                <p className="text-[10px] uppercase tracking-wider text-gray-300">Test Portal</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-bold text-sm text-white">{schoolName}</p>
+                  {board && <span className="text-[11px] font-medium text-brand-gold bg-brand-gold/20 px-2 py-0.5 rounded">({board})</span>}
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Right Side - Form */}
+      {/* Right Side - Candidate Form (Name & Email) */}
       <div className={`
           ${showMobileForm ? 'flex' : 'hidden md:flex'}
-          w-full md:w-1/2 items-center justify-center p-4 md:p-8 lg:p-12 bg-gray-50 h-screen overflow-y-auto animate-fade-in
+          w-full md:w-1/2 items-center justify-center p-6 md:p-12 lg:p-16 bg-gray-50 h-screen overflow-y-auto animate-fade-in
       `}>
-        <div className="w-[90%] md:w-[80%] max-w-md my-auto mx-auto pb-8">
-          <div className="text-center lg:text-left mb-6">
-            <h2 className="text-2xl lg:text-3xl font-bold text-brand-navy tracking-tight mb-2">
-              Student Details
+        <div className="w-[90%] md:w-[85%] max-w-md my-auto mx-auto pb-8">
+          <div className="text-center md:text-left mb-8">
+            <h2 className="text-3xl font-bold text-brand-navy tracking-tight mb-2">
+              Candidate Details
             </h2>
             <p className="text-sm text-gray-600">
-              Please provide complete information to start the test.
+              Please enter your name and email to begin the MCQ examination.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
 
             {/* Student Name */}
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wide">
-                <UserCircle size={14} className="text-brand-navy" />
+                <UserCircle size={15} className="text-brand-navy" />
                 Student Name
               </label>
               <input
@@ -203,127 +213,51 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={isLoading}
-                className={`w-full px-3 py-2.5 bg-white border rounded-lg text-gray-900 outline-none text-sm transition-all ${getError('name') ? 'border-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:border-brand-navy focus:ring-1 focus:ring-brand-navy/20'} ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-                placeholder="Student Full Name"
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 outline-none text-sm focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/20 transition-all"
+                placeholder="Enter Student Full Name"
               />
-              {getError('name') && <p className="text-[10px] text-red-500 font-bold">{getError('name')}</p>}
             </div>
 
-            {/* Grade */}
-            <div className="space-y-1">
+            {/* Email Address */}
+            <div className="space-y-1.5">
               <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wide">
-                <School size={14} className="text-brand-navy" />
-                Grade / Class
+                <Mail size={15} className="text-brand-navy" />
+                Email Address
               </label>
-              <div className="relative">
-                <select
-                  value={grade}
-                  onChange={(e) => setGrade(e.target.value)}
-                  disabled={isLoading}
-                  className={`w-full px-3 py-2.5 bg-white border rounded-lg text-gray-900 outline-none appearance-none text-sm cursor-pointer transition-all ${getError('grade') ? 'border-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:border-brand-navy focus:ring-1 focus:ring-brand-navy/20'} ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-                >
-                  <option value="" disabled>Select Class</option>
-                  <option value="Grade 8">Grade 8</option>
-                  <option value="Grade 9">Grade 9</option>
-                  <option value="Grade 10">Grade 10</option>
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-500">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                </div>
-              </div>
-              {getError('grade') && <p className="text-[10px] text-red-500 font-bold">{getError('grade')}</p>}
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 outline-none text-sm focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/20 transition-all"
+                placeholder="student@example.com"
+              />
             </div>
 
-            {/* Additional Details Fields */}
-            <div className="space-y-4 animate-fade-in">
-              {/* Parent Name */}
-              <div className="space-y-1">
-                <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wide">
-                  <UserIcon size={14} className="text-brand-navy" />
-                  Parent Name
-                </label>
-                <input
-                  type="text"
-                  value={parentName}
-                  onChange={(e) => setParentName(e.target.value)}
-                  className={`w-full px-3 py-2.5 bg-white border rounded-lg text-sm ${getError('parentName') ? 'border-red-500' : 'border-gray-300 focus:border-brand-navy focus:ring-1 focus:ring-brand-navy/20'}`}
-                  placeholder="Parent Name"
-                />
-                {getError('parentName') && <p className="text-[10px] text-red-500 font-bold">{getError('parentName')}</p>}
-              </div>
-
-              {/* Phone */}
-              <div className="space-y-1">
-                <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wide">
-                  <Phone size={14} className="text-brand-navy" />
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className={`w-full px-3 py-2.5 bg-white border rounded-lg text-sm ${getError('phone') ? 'border-red-500' : 'border-gray-300 focus:border-brand-navy focus:ring-1 focus:ring-brand-navy/20'}`}
-                  placeholder="10-digit Mobile Number"
-                />
-                {getError('phone') && <p className="text-[10px] text-red-500 font-bold">{getError('phone')}</p>}
-              </div>
-
-              {/* Email */}
-              <div className="space-y-1">
-                <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wide">
-                  <Mail size={14} className="text-brand-navy" />
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full px-3 py-2.5 bg-white border rounded-lg text-sm ${getError('email') ? 'border-red-500' : 'border-gray-300 focus:border-brand-navy focus:ring-1 focus:ring-brand-navy/20'}`}
-                  placeholder="email@example.com"
-                />
-                {getError('email') && <p className="text-[10px] text-red-500 font-bold">{getError('email')}</p>}
-              </div>
-
-              {/* Location */}
-              <div className="space-y-1">
-                <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wide">
-                  <MapPin size={14} className="text-brand-navy" />
-                  Location
-                </label>
-                <input
-                  type="text"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className={`w-full px-3 py-2.5 bg-white border rounded-lg text-sm ${getError('location') ? 'border-red-500' : 'border-gray-300 focus:border-brand-navy focus:ring-1 focus:ring-brand-navy/20'}`}
-                  placeholder="City, State"
-                />
-                {getError('location') && <p className="text-[10px] text-red-500 font-bold">{getError('location')}</p>}
-              </div>
-            </div>
-
+            {/* Start Test Button */}
             <div className="pt-4">
               <button
                 type="submit"
                 disabled={isLoading}
-                className={`w-full bg-brand-navy text-white py-3.5 rounded-lg font-bold hover:bg-brand-navyLight transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-navy/30 hover:shadow-xl transform hover:-translate-y-0.5 text-base uppercase tracking-wide ${isLoading ? 'cursor-not-allowed opacity-80' : ''}`}
+                className={`w-full bg-brand-navy text-white py-4 rounded-lg font-bold hover:bg-brand-navyLight transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-navy/30 hover:shadow-xl transform hover:-translate-y-0.5 text-base uppercase tracking-wider ${isLoading ? 'cursor-not-allowed opacity-80' : ''}`}
               >
                 {isLoading ? (
                   <>
                     <Loader2 size={18} className="animate-spin" />
-                    Please wait...
+                    Preparing MCQ Test...
                   </>
                 ) : (
                   <>
-                    Start Assessment
+                    Start Test
                     <ArrowRight size={18} />
                   </>
                 )}
               </button>
             </div>
-          </form >
-        </div >
-      </div >
-    </div >
+          </form>
+        </div>
+      </div>
+    </div>
   );
 };
 

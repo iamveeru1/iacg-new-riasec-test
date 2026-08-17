@@ -28,6 +28,10 @@ const TestScreen: React.FC<TestScreenProps> = ({ data, onComplete, isSubmitting 
 
     const isCurrentSectionComplete = currentSection
         ? currentSection.questions.every(q => {
+            // MCQ questions: must have an answer selected (any option)
+            if (q.type === 'mcq') {
+                return answers[q.id] !== undefined && answers[q.id] !== '';
+            }
             if (q.type === 'text' || q.type === 'textarea' || q.type === 'rating') {
                 return answers[q.id] && answers[q.id].toString().trim().length > 0;
             }
@@ -148,7 +152,7 @@ const TestScreen: React.FC<TestScreenProps> = ({ data, onComplete, isSubmitting 
                                             <Loader2 className="animate-spin" size={18} />
                                             Submitting...
                                         </>
-                                    ) : 'Submit Assessment'
+                                    ) : 'Submit Test'
                                 ) : 'Next Section'}
                             </button>
                         )}
