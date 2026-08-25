@@ -11,8 +11,8 @@ interface TestScreenProps {
 }
 
 const TestScreen: React.FC<TestScreenProps> = ({ data, onComplete, isSubmitting = false }) => {
-    // -1 indicates "Instructions" view
-    const [currentSectionIndex, setCurrentSectionIndex] = useState(-1);
+    // -1 indicates "Instructions" view, 0..N-1 indicates current question index
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1);
     const [answers, setAnswers] = useState<UserAnswers>({});
 
     const allQuestions = useMemo(() => {
@@ -23,20 +23,13 @@ const TestScreen: React.FC<TestScreenProps> = ({ data, onComplete, isSubmitting 
     const answeredCount = Object.keys(answers).length;
     const progressPercentage = Math.round((answeredCount / totalQuestions) * 100);
 
-    // Derive current section content
-    const currentSection = currentSectionIndex >= 0 ? data.sections[currentSectionIndex] : null;
+    const isInstructions = currentQuestionIndex === -1;
+    const currentQuestion = !isInstructions && currentQuestionIndex < totalQuestions ? allQuestions[currentQuestionIndex] : null;
+    const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
 
-    const isCurrentSectionComplete = currentSection
-        ? currentSection.questions.every(q => {
-            // MCQ questions: must have an answer selected (any option)
-            if (q.type === 'mcq') {
-                return answers[q.id] !== undefined && answers[q.id] !== '';
-            }
-            if (q.type === 'text' || q.type === 'textarea' || q.type === 'rating') {
-                return answers[q.id] && answers[q.id].toString().trim().length > 0;
-            }
-            return answers[q.id];
-        })
+    // Check if the current question has been answered
+    const isCurrentQuestionAnswered = currentQuestion
+        ? (answers[currentQuestion.id] !== undefined && answers[currentQuestion.id] !== '')
         : false;
 
     const handleAnswer = (qId: string, val: string) => {
@@ -44,28 +37,23 @@ const TestScreen: React.FC<TestScreenProps> = ({ data, onComplete, isSubmitting 
     };
 
     const handleNext = () => {
-        if (currentSectionIndex === -1) {
-            // Moving from Instructions to First Section
-            setCurrentSectionIndex(0);
+        if (currentQuestionIndex === -1) {
+            // Moving from Instructions to First Question
+            setCurrentQuestionIndex(0);
             window.scrollTo(0, 0);
             return;
         }
 
-        if (currentSectionIndex < data.sections.length - 1) {
-            setCurrentSectionIndex(prev => prev + 1);
+        if (currentQuestionIndex < totalQuestions - 1) {
+            setCurrentQuestionIndex(prev => prev + 1);
             window.scrollTo(0, 0);
         } else {
             onComplete(answers);
         }
     };
 
-    // Check if a specific question is answered
-    const isQuestionAnswered = (qId: string) => {
-        const val = answers[qId];
-        return val !== undefined && val.toString().trim().length > 0;
-    };
-
-    const isInstructions = currentSectionIndex === -1;
+    // Current section title for heading
+    const currentSectionTitle = data.sections[0]?.title || 'Assessment';
 
     return (
         <div className={`flex-1 flex flex-col font-sans bg-gray-50 ${isInstructions ? '' : 'pb-20'}`}>
@@ -86,76 +74,58 @@ const TestScreen: React.FC<TestScreenProps> = ({ data, onComplete, isSubmitting 
                 </div>
             )}
 
-            {/* Main Content Area - Reduced to 55% width for focused look */}
+            {/* Main Content Area - Original 55% width */}
             <div className={`flex-1 w-full md:max-w-[55%] mx-auto px-4 ${isInstructions ? 'py-4 flex items-center justify-center' : 'py-8'}`}>
                 {isInstructions ? (
                     <InstructionScreen onStart={handleNext} />
                 ) : (
                     <>
-                        {currentSection && (
+                        {currentSectionTitle && (
                             <div className="mb-8 border-b-2 border-gray-200 pb-4">
-                                <h2 className="text-2xl md:text-3xl font-bold text-brand-navy tracking-tight">{currentSection.title}</h2>
+                                <h2 className="text-2xl md:text-3xl font-bold text-brand-navy tracking-tight">{currentSectionTitle}</h2>
                             </div>
                         )}
                         <div className="space-y-8">
-                            {/* Section Questions */}
-                            {currentSection && currentSection.questions.map((q, qIdx) => {
-                                // Group Logic: Show subheading if it's the first item, or if it differs from previous item's subheading
-                                const prevQ = qIdx > 0 ? currentSection.questions[qIdx - 1] : null;
-                                const showSubheading = q.subheading && (!prevQ || prevQ.subheading !== q.subheading);
-
-                                return (
-                                    <React.Fragment key={q.id}>
-                                        {showSubheading && (
-                                            <div className="mt-10 mb-6">
-                                                <h3 className="text-xl font-bold text-brand-navy border-b-[3px] border-brand-gold inline-block pb-1 pr-8 tracking-wide">
-                                                    {q.subheading}
-                                                </h3>
-                                            </div>
-                                        )}
-                                        <QuestionCard
-                                            question={q}
-                                            selectedOption={answers[q.id]}
-                                            isAnswered={isQuestionAnswered(q.id)}
-                                            onAnswer={handleAnswer}
-                                            globalIndex={allQuestions.findIndex(aq => aq.id === q.id) + 1}
-                                        />
-                                    </React.Fragment>
-                                );
-                            })}
+                            {currentQuestion && (
+                                <QuestionCard
+                                    question={currentQuestion}
+                                    selectedOption={answers[currentQuestion.id]}
+                                    isAnswered={isCurrentQuestionAnswered}
+                                    onAnswer={handleAnswer}
+                                    globalIndex={currentQuestionIndex + 1}
+                                />
+                            )}
                         </div>
                     </>
                 )}
             </div>
 
-            {/* Footer Navigation - Only show if not instructions */}
+            {/* Footer Navigation - Original fixed bottom bar */}
             {!isInstructions && (
                 <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-50">
                     <div className="w-full md:max-w-[55%] mx-auto flex justify-between items-center">
                         <div className="text-xs text-gray-400 font-medium">
-                            {currentSectionIndex >= 0 && `${answeredCount} of ${totalQuestions} answered`}
+                            {currentQuestionIndex >= 0 && `${answeredCount} of ${totalQuestions} answered`}
                         </div>
-                        {currentSectionIndex !== -1 && (
-                            <button
-                                onClick={handleNext}
-                                disabled={!isCurrentSectionComplete || isSubmitting}
-                                className={`
-                            px-10 py-3 rounded-lg font-bold uppercase tracking-widest text-sm shadow-lg transition-all transform flex items-center gap-2
-                            ${isCurrentSectionComplete && !isSubmitting
-                                        ? 'bg-brand-navy text-white hover:bg-brand-navyLight hover:-translate-y-0.5'
-                                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'}
-                        `}
-                            >
-                                {currentSectionIndex === data.sections.length - 1 ? (
-                                    isSubmitting ? (
-                                        <>
-                                            <Loader2 className="animate-spin" size={18} />
-                                            Submitting...
-                                        </>
-                                    ) : 'Submit Test'
-                                ) : 'Next Section'}
-                            </button>
-                        )}
+                        <button
+                            onClick={handleNext}
+                            disabled={!isCurrentQuestionAnswered || isSubmitting}
+                            className={`
+                                px-10 py-3 rounded-lg font-bold uppercase tracking-widest text-sm shadow-lg transition-all transform flex items-center gap-2
+                                ${isCurrentQuestionAnswered && !isSubmitting
+                                    ? 'bg-brand-navy text-white hover:bg-brand-navyLight hover:-translate-y-0.5'
+                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'}
+                            `}
+                        >
+                            {isLastQuestion ? (
+                                isSubmitting ? (
+                                    <>
+                                        <Loader2 className="animate-spin" size={18} />
+                                        Submitting...
+                                    </>
+                                ) : 'Submit Test'
+                            ) : 'Next'}
+                        </button>
                     </div>
                 </div>
             )}

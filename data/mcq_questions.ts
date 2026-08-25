@@ -614,7 +614,7 @@ export function getRandomMCQQuestions(count: number = 20): Question[] {
 export function buildMCQAssessment(questionCount: number = 20) {
   const questions = getRandomMCQQuestions(questionCount);
   return {
-    milestoneId: 'mcq_arch',
+    milestoneId: 'architecture_construction_built_environment',
     sections: [
       {
         id: 'mcq_section_1',

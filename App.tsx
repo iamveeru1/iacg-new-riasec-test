@@ -7,7 +7,7 @@ import SubmissionSuccessScreen from './components/Assessment/SubmissionSuccessSc
 import Header from './components/Layout/Header';
 
 import { db, auth } from './utils/firebase';
-import { collection, addDoc, doc, updateDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+import { collection, doc, setDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { signInAnonymously, onAuthStateChanged } from "firebase/auth";
 
 function App() {
@@ -47,31 +47,11 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [serverErrors, setServerErrors] = useState<{ [key: string]: string }>({});
 
-  const handleStudentDetailsSubmit = async (studentUser: User) => {
-    setIsLoading(true);
-    setServerErrors({}); // Clear previous errors
-
-    const staticUserId = `student_${Date.now()}`;
-    let userWithId: User = { ...studentUser, id: staticUserId };
-
-    try {
-      // Optional Firebase sync if available
-      const studentsRef = collection(db, "students");
-      const docRef = await addDoc(studentsRef, {
-        ...studentUser,
-        status: 'REGISTERED',
-        createdAt: serverTimestamp(),
-      });
-      userWithId = { ...studentUser, id: docRef.id };
-    } catch (error) {
-      console.warn("Firebase save skipped/failed (continuing with static user):", error);
-    } finally {
-      setUser(userWithId);
-      // Randomly pick 20 questions from the 50-question MCQ bank for this student
-      setAssessmentData(buildMCQAssessment(20));
-      setCurrentView(ViewState.ASSESSMENT);
-      setIsLoading(false);
-    }
+  const handleStudentDetailsSubmit = (studentUser: User) => {
+    setUser(studentUser);
+    // Randomly pick 20 questions from the 50-question MCQ bank for this student
+    setAssessmentData(buildMCQAssessment(20));
+    setCurrentView(ViewState.ASSESSMENT);
   };
 
   const handleLogout = () => {
@@ -84,17 +64,44 @@ function App() {
 
   const completeTest = async (answers: UserAnswers) => {
     setIsLoading(true);
+
+    const allQuestions = assessmentData?.sections.flatMap(s => s.questions) || [];
+    const testTitle = assessmentData?.sections[0]?.title || 'Architecture, Construction & Built Environment';
+    const testId = assessmentData?.milestoneId || 'architecture_construction_built_environment';
+    
+    // Build clean results map: { questionId: "correct" | "wrong" }
+    const results: { [questionId: string]: 'correct' | 'wrong' } = {};
+    allQuestions.forEach(q => {
+      results[q.id] = answers[q.id] === q.correctAnswer ? 'correct' : 'wrong';
+    });
+
+    const userEmail = (user?.email || '').trim().toLowerCase();
+
     try {
-      if (user?.id) {
-        const studentRef = doc(db, "students", user.id);
-        await updateDoc(studentRef, {
-          answers: answers,
-          status: 'COMPLETED',
-          completedAt: serverTimestamp()
+      if (userEmail) {
+        // Document ID is the student's email, ensuring all tests for this student are grouped in one document
+        const studentDocRef = doc(db, "students", userEmail);
+        
+        // Save under tests[testId] with merge: true so other tests are preserved
+        await setDoc(studentDocRef, {
+          email: user?.email || userEmail,
+          tests: {
+            [testId]: {
+              testId: testId,
+              testName: testTitle,
+              results: results
+            }
+          }
+        }, { merge: true });
+
+        console.log("Firebase submission saved successfully for student:", {
+          email: userEmail,
+          testId,
+          results
         });
       }
     } catch (error) {
-      console.warn("Firebase update skipped/failed (submitting locally):", error);
+      console.warn("Firebase save error:", error);
     } finally {
       setUserAnswers(answers);
       setCurrentView(ViewState.SUCCESS);

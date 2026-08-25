@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
-import { UserCircle, Mail, ArrowRight, Loader2, Compass, CheckCircle2, Sparkles, Palette, Activity, Briefcase } from 'lucide-react';
+import { Mail, ArrowRight, Loader2, Compass, CheckCircle2, Sparkles, Palette, Activity, Briefcase, AlertCircle } from 'lucide-react';
+import { db } from '../../utils/firebase';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 
 interface StudentInputScreenProps {
   onSubmit: (user: User) => void;
   isLoading?: boolean;
   serverErrors?: { [key: string]: string };
 }
+
+const CURRENT_TEST_ID = 'architecture_construction_built_environment';
+const CURRENT_TEST_NAME = 'Architecture, Construction & Built Environment';
 
 const DOMAIN_PILLARS = [
   {
@@ -31,10 +36,14 @@ const DOMAIN_PILLARS = [
   }
 ];
 
+const EMAIL_OPTIONS = Array.from({ length: 10 }, (_, i) => `veeru${i + 1}@gmail.com`);
+
 const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoading = false, serverErrors = {} }) => {
-  // Candidate Details (Name & Email)
-  const [name, setName] = useState('Demo Student');
-  const [email, setEmail] = useState('student@example.com');
+  // Candidate Email
+  const [email, setEmail] = useState('');
+  const [attemptedEmails, setAttemptedEmails] = useState<string[]>([]);
+  const [checkError, setCheckError] = useState<string>('');
+  const [isChecking, setIsChecking] = useState<boolean>(false);
 
   // Hidden/URL Params
   const [schoolName, setSchoolName] = useState('');
@@ -44,6 +53,30 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [showMobileForm, setShowMobileForm] = useState(false);
+
+  // Fetch already attempted emails for THIS specific test from Firestore on mount
+  useEffect(() => {
+    const fetchAttemptedEmails = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, "students"));
+        const emails: string[] = [];
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const docEmail = (data.email || docSnap.id || '').trim().toLowerCase();
+          // Check if this specific test has been attempted (or legacy single-result structure)
+          const hasAttemptedThisTest = Boolean(data.tests?.[CURRENT_TEST_ID] || (data.results && !data.tests));
+          if (docEmail && hasAttemptedThisTest) {
+            emails.push(docEmail);
+          }
+        });
+        setAttemptedEmails(emails);
+      } catch (err) {
+        console.warn("Could not fetch attempted emails from database:", err);
+      }
+    };
+
+    fetchAttemptedEmails();
+  }, []);
 
   useEffect(() => {
     // Parse query params
@@ -61,24 +94,60 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
     console.log("Params captured:", { sName, uCode, cEmail, sBoard });
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLoading) return;
+    if (isLoading || isChecking) return;
 
-    // Build user object with candidate details
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) return;
+
+    setIsChecking(true);
+    setCheckError('');
+
+    // Check Firestore database to see if this student has already attempted this specific test
+    try {
+      const studentDocRef = doc(db, "students", trimmedEmail.toLowerCase());
+      const docSnap = await getDoc(studentDocRef);
+
+      let isAlreadyTaken = false;
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.tests?.[CURRENT_TEST_ID] || data.results) {
+          isAlreadyTaken = true;
+        }
+      }
+
+      // Also check fallback for any documents stored with auto-ID
+      if (!isAlreadyTaken) {
+        const q = query(collection(db, "students"), where("email", "==", trimmedEmail));
+        const snapshot = await getDocs(q);
+        snapshot.forEach(d => {
+          const data = d.data();
+          if (data.tests?.[CURRENT_TEST_ID] || data.results) {
+            isAlreadyTaken = true;
+          }
+        });
+      }
+
+      if (isAlreadyTaken) {
+        setCheckError(`The email "${trimmedEmail}" has already completed the ${CURRENT_TEST_NAME} assessment.`);
+        if (!attemptedEmails.includes(trimmedEmail.toLowerCase())) {
+          setAttemptedEmails(prev => [...prev, trimmedEmail.toLowerCase()]);
+        }
+        setIsChecking(false);
+        return;
+      }
+    } catch (error) {
+      console.warn("Error verifying email in database:", error);
+    }
+
+    setIsChecking(false);
+
     const user: User = {
-      name: name.trim() || 'Demo Student',
-      email: email.trim() || 'student@example.com',
-      studentClass: 'Grade 10',
-      school: schoolName || 'IACG International',
-      schoolCode: uniqueCode || 'N/A',
-      counsellorEmail: counsellorEmail,
-      board: board || 'CBSE',
-      parentName: 'Parent',
-      mobileNumber: '9876543210',
-      location: 'Hyderabad',
+      name: trimmedEmail,
+      email: trimmedEmail,
+      school: schoolName || 'IACG',
     };
-    console.log("Submitting candidate for MCQ test:", user);
     onSubmit(user);
   };
 
@@ -185,7 +254,7 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
         </div>
       </div>
 
-      {/* Right Side - Candidate Form (Name & Email) */}
+      {/* Right Side - Candidate Form (Email Dropdown) */}
       <div className={`
           ${showMobileForm ? 'flex' : 'hidden md:flex'}
           w-full md:w-1/2 items-center justify-center p-6 md:p-12 lg:p-16 bg-gray-50 h-screen overflow-y-auto animate-fade-in
@@ -196,52 +265,75 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
               Candidate Details
             </h2>
             <p className="text-sm text-gray-600">
-              Please enter your name and email to begin the MCQ examination.
+              Please select your email from the list to begin the MCQ examination.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
 
-            {/* Student Name */}
-            <div className="space-y-1.5">
-              <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wide">
-                <UserCircle size={15} className="text-brand-navy" />
-                Student Name
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={isLoading}
-                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 outline-none text-sm focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/20 transition-all"
-                placeholder="Enter Student Full Name"
-              />
-            </div>
-
-            {/* Email Address */}
+            {/* Email Address Dropdown */}
             <div className="space-y-1.5">
               <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wide">
                 <Mail size={15} className="text-brand-navy" />
-                Email Address
+                Select Email Address
               </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 outline-none text-sm focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/20 transition-all"
-                placeholder="student@example.com"
-              />
+              <div className="relative">
+                <select
+                  required
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setCheckError('');
+                  }}
+                  disabled={isLoading || isChecking}
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 outline-none text-sm focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/20 transition-all appearance-none cursor-pointer pr-10 font-medium"
+                >
+                  <option value="" disabled>-- Select Candidate Email --</option>
+                  {EMAIL_OPTIONS.map((em) => {
+                    const isAttempted = attemptedEmails.includes(em.toLowerCase());
+                    return (
+                      <option 
+                        key={em} 
+                        value={em} 
+                        disabled={isAttempted}
+                        className={isAttempted ? "text-gray-400 bg-gray-100" : "text-gray-900"}
+                      >
+                        {em} {isAttempted ? '— (Already Attempted)' : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
+                  </svg>
+                </div>
+              </div>
             </div>
+
+            {/* Error Message when Email is already attempted */}
+            {checkError && (
+              <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg flex items-start gap-2.5 animate-fade-in shadow-sm">
+                <AlertCircle size={17} className="text-red-500 shrink-0 mt-0.5" />
+                <div className="flex-1 leading-relaxed">
+                  <p className="font-semibold">{checkError}</p>
+                </div>
+              </div>
+            )}
 
             {/* Start Test Button */}
             <div className="pt-4">
               <button
                 type="submit"
-                disabled={isLoading}
-                className={`w-full bg-brand-navy text-white py-4 rounded-lg font-bold hover:bg-brand-navyLight transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-navy/30 hover:shadow-xl transform hover:-translate-y-0.5 text-base uppercase tracking-wider ${isLoading ? 'cursor-not-allowed opacity-80' : ''}`}
+                disabled={isLoading || isChecking || (!!email && attemptedEmails.includes(email.toLowerCase()))}
+                className={`w-full bg-brand-navy text-white py-4 rounded-lg font-bold hover:bg-brand-navyLight transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-navy/30 hover:shadow-xl transform hover:-translate-y-0.5 text-base uppercase tracking-wider ${(isLoading || isChecking || (!!email && attemptedEmails.includes(email.toLowerCase()))) ? 'cursor-not-allowed opacity-75' : ''}`}
               >
-                {isLoading ? (
+                {isChecking ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    Checking Database...
+                  </>
+                ) : isLoading ? (
                   <>
                     <Loader2 size={18} className="animate-spin" />
                     Preparing MCQ Test...
