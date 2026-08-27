@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { AssessmentData, UserAnswers } from '../../types';
 import QuestionCard from './QuestionCard';
 import InstructionScreen from './InstructionScreen';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Clock } from 'lucide-react';
 
 interface TestScreenProps {
     data: AssessmentData;
@@ -10,10 +10,13 @@ interface TestScreenProps {
     isSubmitting?: boolean;
 }
 
+const QUESTION_TIMER_SECONDS = 60;
+
 const TestScreen: React.FC<TestScreenProps> = ({ data, onComplete, isSubmitting = false }) => {
     // -1 indicates "Instructions" view, 0..N-1 indicates current question index
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1);
     const [answers, setAnswers] = useState<UserAnswers>({});
+    const [timeLeft, setTimeLeft] = useState<number>(QUESTION_TIMER_SECONDS);
 
     const allQuestions = useMemo(() => {
         return data.sections.flatMap(s => s.questions);
@@ -32,6 +35,42 @@ const TestScreen: React.FC<TestScreenProps> = ({ data, onComplete, isSubmitting 
         ? (answers[currentQuestion.id] !== undefined && answers[currentQuestion.id] !== '')
         : false;
 
+    // Keep ref to latest answers and indexes for timer callback
+    const answersRef = useRef(answers);
+    answersRef.current = answers;
+
+    const currentIndexRef = useRef(currentQuestionIndex);
+    currentIndexRef.current = currentQuestionIndex;
+
+    const totalQuestionsRef = useRef(totalQuestions);
+    totalQuestionsRef.current = totalQuestions;
+
+    // 60-second countdown timer per question
+    useEffect(() => {
+        if (isInstructions || isSubmitting) return;
+
+        setTimeLeft(QUESTION_TIMER_SECONDS);
+
+        const interval = setInterval(() => {
+            setTimeLeft(prev => {
+                if (prev <= 1) {
+                    clearInterval(interval);
+                    // Timer expired: auto-advance to next question or submit
+                    if (currentIndexRef.current < totalQuestionsRef.current - 1) {
+                        setCurrentQuestionIndex(c => c + 1);
+                        window.scrollTo(0, 0);
+                    } else {
+                        onComplete(answersRef.current);
+                    }
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [currentQuestionIndex, isInstructions, isSubmitting, onComplete]);
+
     const handleAnswer = (qId: string, val: string) => {
         setAnswers(prev => ({ ...prev, [qId]: val }));
     };
@@ -40,12 +79,14 @@ const TestScreen: React.FC<TestScreenProps> = ({ data, onComplete, isSubmitting 
         if (currentQuestionIndex === -1) {
             // Moving from Instructions to First Question
             setCurrentQuestionIndex(0);
+            setTimeLeft(QUESTION_TIMER_SECONDS);
             window.scrollTo(0, 0);
             return;
         }
 
         if (currentQuestionIndex < totalQuestions - 1) {
             setCurrentQuestionIndex(prev => prev + 1);
+            setTimeLeft(QUESTION_TIMER_SECONDS);
             window.scrollTo(0, 0);
         } else {
             onComplete(answers);
@@ -81,8 +122,12 @@ const TestScreen: React.FC<TestScreenProps> = ({ data, onComplete, isSubmitting 
                 ) : (
                     <>
                         {currentSectionTitle && (
-                            <div className="mb-8 border-b-2 border-gray-200 pb-4">
+                            <div className="mb-8 border-b-2 border-gray-200 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <h2 className="text-2xl md:text-3xl font-bold text-brand-navy tracking-tight">{currentSectionTitle}</h2>
+                                <div className={`self-start sm:self-auto flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-sm font-mono font-bold shadow-sm transition-all duration-300 ${timeLeft <= 10 ? 'bg-red-50 text-red-600 border-red-300 animate-pulse' : 'bg-blue-50 text-brand-navy border-blue-200'}`}>
+                                    <Clock size={16} className={timeLeft <= 10 ? 'text-red-500' : 'text-brand-gold'} />
+                                    <span>00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}</span>
+                                </div>
                             </div>
                         )}
                         <div className="space-y-8">

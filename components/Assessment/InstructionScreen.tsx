@@ -31,7 +31,7 @@ const InstructionScreen: React.FC<InstructionScreenProps> = ({ onStart }) => {
                 {/* Highlighted Banner */}
                 <div className="bg-brand-navy p-4 rounded-lg shadow-md shadow-brand-navy/10 text-center">
                     <p className="font-bold text-white text-sm md:text-base leading-relaxed tracking-wide">
-                        20 RANDOMLY SELECTED QUESTIONS · <span className="text-brand-gold">ONE CORRECT ANSWER</span> PER QUESTION
+                        20 QUESTIONS · <span className="text-brand-gold">60 SECONDS PER QUESTION</span> · 1 ATTEMPT PER STUDENT
                     </p>
                 </div>
 
@@ -47,11 +47,11 @@ const InstructionScreen: React.FC<InstructionScreenProps> = ({ onStart }) => {
                         </div>
                         <div className="flex items-start gap-2 p-2 bg-white rounded-lg border border-gray-100">
                             <span className="w-5 h-5 rounded-full bg-brand-navy text-white flex items-center justify-center text-[10px] font-bold shrink-0">2</span>
-                            <span>Instant feedback is shown after you answer</span>
+                            <span>Click Next to proceed or wait for 60s auto-advance</span>
                         </div>
                         <div className="flex items-start gap-2 p-2 bg-white rounded-lg border border-gray-100">
                             <span className="w-5 h-5 rounded-full bg-brand-navy text-white flex items-center justify-center text-[10px] font-bold shrink-0">3</span>
-                            <span>Submit when all 20 questions are answered</span>
+                            <span>Submit when all 20 questions are completed</span>
                         </div>
                     </div>
                 </div>
@@ -77,7 +77,7 @@ const InstructionScreen: React.FC<InstructionScreenProps> = ({ onStart }) => {
                 <div className="space-y-1 pt-1">
                     <p className="text-brand-navy font-bold text-xs md:text-sm uppercase tracking-wide">IMPORTANT</p>
                     <p className="text-gray-600 text-xs md:text-sm">
-                        Once you select an answer for a question, <strong>it cannot be changed</strong>. Each student gets a unique random set of 20 questions from the full 50-question bank.
+                        You have <strong>60 seconds</strong> for each question. Once an option is chosen, the <strong>Next</strong> button is activated to let you continue immediately. If no option is selected, the test will automatically advance when the 60s timer expires.
                     </p>
                 </div>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
-import { Mail, ArrowRight, Loader2, Compass, CheckCircle2, Sparkles, Palette, Activity, Briefcase, AlertCircle } from 'lucide-react';
+import { Mail, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { db } from '../../utils/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 
@@ -12,29 +12,6 @@ interface StudentInputScreenProps {
 
 const CURRENT_TEST_ID = 'architecture_construction_built_environment';
 const CURRENT_TEST_NAME = 'Architecture, Construction & Built Environment';
-
-const DOMAIN_PILLARS = [
-  {
-    icon: Sparkles,
-    title: "Computer Science, AI & Engineering",
-    desc: "AI, AR/VR, Space Tech, Computing, IT & Core Engineering"
-  },
-  {
-    icon: Palette,
-    title: "Digital Media, Animation & Design",
-    desc: "Animation, Visual Communication, Gaming & Creator Media"
-  },
-  {
-    icon: Activity,
-    title: "Healthcare, Sciences & Environment",
-    desc: "Medical Sciences, Pharma, Health & Applied Sciences"
-  },
-  {
-    icon: Briefcase,
-    title: "Business, Law & Social Studies",
-    desc: "Commerce, Social Sciences, Management & Public Administration"
-  }
-];
 
 const EMAIL_OPTIONS = Array.from({ length: 10 }, (_, i) => `veeru${i + 1}@gmail.com`);
 
@@ -155,118 +132,66 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
 
   return (
     <div className="min-h-screen flex w-full bg-white relative">
-      {/* Left Side (Desktop) / Test Overview (Mobile) */}
+      {/* Left Side (Desktop) / Test Overview (Mobile) - 60% Width */}
       <div className={`
           ${showMobileForm ? 'hidden md:flex' : 'flex'} 
-          w-full md:w-1/2 relative overflow-hidden bg-brand-navy min-h-screen md:min-h-auto transition-all duration-500
+          w-full md:w-[60%] relative overflow-hidden bg-brand-navy min-h-screen md:min-h-auto transition-all duration-500 items-center justify-center
       `}>
         {/* Dynamic Background Image */}
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-25 mix-blend-luminosity scale-105 transition-transform duration-1000"
+          className="absolute inset-0 bg-cover bg-center opacity-20 mix-blend-luminosity scale-105 transition-transform duration-1000"
           style={{ backgroundImage: "url('https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=2070&auto=format&fit=crop')" }}
         />
 
         {/* Ambient Gradient Glows */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-gold/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-brand-gold/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-[450px] h-[450px] bg-blue-600/15 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col h-full w-full p-6 md:p-10 lg:p-12 text-white justify-between">
-          {/* Top Section: Logo + MCQ Overview Content */}
-          <div className="flex-1 flex flex-col items-center md:items-start pt-2 md:pt-0">
-            {/* Logo */}
-            <div className="mb-4 md:mb-6">
+        <div className="relative z-10 flex flex-col items-center justify-center text-center h-full w-full p-8 md:p-12 lg:p-16 my-auto">
+          {/* Logo in White Badge */}
+          <div className="mb-7">
+            <div className="bg-white px-6 py-3 rounded-2xl shadow-xl inline-flex items-center justify-center border border-white/20">
               <img
                 src="/logo.png"
                 alt="IACG Multimedia College"
-                className="h-14 w-auto object-contain bg-white p-2 rounded-md shadow-md"
+                className="h-12 md:h-14 w-auto object-contain"
               />
-            </div>
-
-            {/* MCQ Assessment Heading & Description */}
-            <div className="w-full text-center md:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-gold/20 text-brand-gold text-xs font-semibold uppercase tracking-wider mb-3">
-                <Compass size={14} />
-                Online MCQ Examination
-              </div>
-
-              <h2 className="text-2xl lg:text-4xl font-bold mb-3 leading-tight text-white tracking-tight">
-                Multi-Disciplinary MCQ Assessment
-              </h2>
-              <p className="text-xs lg:text-sm text-gray-200 mb-6 max-w-xl leading-relaxed">
-                Test your knowledge, conceptual clarity, and objective reasoning across 22 comprehensive multidisciplinary subject modules:
-              </p>
-
-              {/* 4 Representative Subject Clusters */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left mb-6">
-                {DOMAIN_PILLARS.map((pillar, idx) => {
-                  const Icon = pillar.icon;
-                  return (
-                    <div
-                      key={idx}
-                      className="p-3 rounded-xl bg-white/[0.07] hover:bg-white/[0.12] backdrop-blur-md border border-white/10 transition-all duration-300 group shadow-sm"
-                    >
-                      <div className="flex items-center gap-2.5 mb-1">
-                        <div className="w-7 h-7 rounded-lg bg-brand-gold/20 text-brand-gold flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                          <Icon size={16} />
-                        </div>
-                        <h4 className="font-bold text-xs text-white leading-tight">{pillar.title}</h4>
-                      </div>
-                      <p className="text-[11px] text-gray-300 pl-9 leading-relaxed">{pillar.desc}</p>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Key Features Badges */}
-              <div className="flex flex-wrap items-center gap-3 pt-2 justify-center md:justify-start">
-                <div className="flex items-center gap-1.5 text-xs text-gray-300 bg-black/20 px-3 py-1.5 rounded-lg border border-white/5">
-                  <CheckCircle2 size={13} className="text-brand-gold" />
-                  <span>22 MCQ Question Modules</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-gray-300 bg-black/20 px-3 py-1.5 rounded-lg border border-white/5">
-                  <CheckCircle2 size={13} className="text-brand-gold" />
-                  <span>Objective Multiple Choice Format</span>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setShowMobileForm(true)}
-                className="md:hidden bg-brand-gold text-brand-navy px-8 py-3 rounded-full font-bold uppercase tracking-widest shadow-lg hover:bg-white transition-all transform active:scale-95 flex items-center gap-2 mt-6 mx-auto"
-              >
-                Start Test
-                <ArrowRight size={18} />
-              </button>
             </div>
           </div>
 
-          {/* School / Institution Banner if present */}
-          {schoolName && (
-            <div className="flex-none pt-4 opacity-90 justify-center md:justify-start">
-              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20 inline-flex flex-col">
-                <p className="text-[10px] uppercase tracking-wider text-gray-300">Test Portal</p>
-                <div className="flex items-center gap-2">
-                  <p className="font-bold text-sm text-white">{schoolName}</p>
-                  {board && <span className="text-[11px] font-medium text-brand-gold bg-brand-gold/20 px-2 py-0.5 rounded">({board})</span>}
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Heading - Increased Font Size */}
+          <h2 className="text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight text-white mb-5 leading-tight">
+            Multi-Disciplinary <span className="text-[#FBBF24]">MCQ Assessment</span>
+          </h2>
+
+          {/* Subtitle / Description - Student Focused */}
+          <p className="text-sm md:text-base lg:text-[17px] text-gray-200 max-w-2xl mx-auto leading-relaxed text-center opacity-95">
+            Online student examination and skill evaluation portal. Test your knowledge,<br className="hidden lg:inline" />
+            {" "}conceptual clarity, and multidisciplinary reasoning across comprehensive<br className="hidden lg:inline" />
+            {" "}academic and professional subject modules.
+          </p>
+
+          {/* Mobile Start Test Button */}
+          <button
+            onClick={() => setShowMobileForm(true)}
+            className="md:hidden bg-brand-gold text-brand-navy px-8 py-3 rounded-full font-bold uppercase tracking-widest shadow-lg hover:bg-white transition-all transform active:scale-95 flex items-center gap-2 mt-8 mx-auto text-sm"
+          >
+            Start Test
+            <ArrowRight size={18} />
+          </button>
         </div>
       </div>
 
-      {/* Right Side - Candidate Form (Email Dropdown) */}
+      {/* Right Side - Candidate Form (Email Dropdown) - 40% Width */}
       <div className={`
           ${showMobileForm ? 'flex' : 'hidden md:flex'}
-          w-full md:w-1/2 items-center justify-center p-6 md:p-12 lg:p-16 bg-gray-50 h-screen overflow-y-auto animate-fade-in
+          w-full md:w-[40%] items-center justify-center p-6 md:p-10 lg:p-12 bg-gray-50 h-screen overflow-y-auto animate-fade-in
       `}>
         <div className="w-[90%] md:w-[85%] max-w-md my-auto mx-auto pb-8">
           <div className="text-center md:text-left mb-8">
-            <h2 className="text-3xl font-bold text-brand-navy tracking-tight mb-2">
+            <h2 className="text-3xl font-bold text-brand-navy tracking-tight">
               Candidate Details
             </h2>
-            <p className="text-sm text-gray-600">
-              Please select your email from the list to begin the MCQ examination.
-            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">

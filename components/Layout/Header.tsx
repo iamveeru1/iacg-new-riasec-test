@@ -21,11 +21,8 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout }) => {
 
       {user && (
         <div className="flex items-center gap-6">
-          <div className="text-right hidden md:block">
-            <p className="text-sm font-bold text-brand-navy">{user.email || user.name}</p>
-            <p className="text-xs text-gray-500 font-medium">
-              {user.studentClass ? `${user.studentClass} • ` : ''}{user.school}
-            </p>
+          <div className="hidden md:flex items-center">
+            <p className="text-sm font-bold text-brand-navy leading-none">{user.email || user.name}</p>
           </div>
           <button
             onClick={onLogout}
