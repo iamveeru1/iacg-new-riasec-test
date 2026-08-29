@@ -11,10 +11,13 @@ export enum ViewState {
 
 export interface User {
   id?: string;
+  docId?: string;
   name: string;
   school: string;
   studentClass?: string;
   email?: string;
+  rollNumber?: string;
+  rollNo?: string;
   parentName?: string;
   schoolAddress?: string;
   mobileNumber?: string;
@@ -24,6 +27,7 @@ export interface User {
   counsellorEmail?: string;
   createdAt?: any;
   status?: string;
+  tests?: { [testId: string]: any };
 }
 
 export interface Milestone {

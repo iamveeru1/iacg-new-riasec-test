@@ -71,33 +71,60 @@ function App() {
     
     // Build clean results map: { questionId: "correct" | "wrong" }
     const results: { [questionId: string]: 'correct' | 'wrong' } = {};
+    let correctCount = 0;
     allQuestions.forEach(q => {
-      results[q.id] = answers[q.id] === q.correctAnswer ? 'correct' : 'wrong';
+      const isCorrect = answers[q.id] === q.correctAnswer;
+      results[q.id] = isCorrect ? 'correct' : 'wrong';
+      if (isCorrect) correctCount++;
     });
 
     const userEmail = (user?.email || '').trim().toLowerCase();
+    const studentDocId = user?.docId || userEmail;
+    const submissionTime = new Date().toISOString();
 
     try {
       if (userEmail) {
-        // Document ID is the student's email, ensuring all tests for this student are grouped in one document
-        const studentDocRef = doc(db, "students", userEmail);
-        
-        // Save under tests[testId] with merge: true so other tests are preserved
+        // 1. Update tests on the student's existing Firestore document with merge: true to preserve admin fields
+        const studentDocRef = doc(db, "students", studentDocId);
         await setDoc(studentDocRef, {
-          email: user?.email || userEmail,
           tests: {
             [testId]: {
               testId: testId,
               testName: testTitle,
-              results: results
+              results: results,
+              score: correctCount,
+              totalQuestions: allQuestions.length,
+              percentage: Math.round((correctCount / (allQuestions.length || 1)) * 100),
+              submittedAt: submissionTime
             }
-          }
+          },
+          updatedAt: submissionTime
         }, { merge: true });
 
-        console.log("Firebase submission saved successfully for student:", {
+        // 2. Store separate dedicated test result record linked with email
+        const sanitizedEmail = userEmail.replace(/[^a-zA-Z0-9]/g, '_');
+        const resultDocRef = doc(db, "test_results", `${sanitizedEmail}_${testId}`);
+        await setDoc(resultDocRef, {
+          studentDocId: studentDocId,
+          email: user?.email || userEmail,
+          name: user?.name || '',
+          rollNumber: user?.rollNumber || user?.rollNo || '',
+          testId: testId,
+          testName: testTitle,
+          results: results,
+          score: correctCount,
+          totalQuestions: allQuestions.length,
+          percentage: Math.round((correctCount / (allQuestions.length || 1)) * 100),
+          submittedAt: submissionTime,
+          timestamp: serverTimestamp()
+        }, { merge: true });
+
+        console.log("Assessment results successfully saved:", {
+          studentDocId,
           email: userEmail,
           testId,
-          results
+          score: correctCount,
+          totalQuestions: allQuestions.length
         });
       }
     } catch (error) {
@@ -137,6 +164,9 @@ function App() {
           />
         ) : currentView === ViewState.SUCCESS ? (
           <SubmissionSuccessScreen
+            user={user}
+            assessmentData={assessmentData}
+            userAnswers={userAnswers}
             onGoHome={handleLogout}
           />
         ) : null}

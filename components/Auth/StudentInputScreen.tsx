@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
-import { Mail, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
+import { Mail, ArrowRight, Loader2, AlertCircle, Hash } from 'lucide-react';
 import { db } from '../../utils/firebase';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 
 interface StudentInputScreenProps {
   onSubmit: (user: User) => void;
@@ -10,15 +10,28 @@ interface StudentInputScreenProps {
   serverErrors?: { [key: string]: string };
 }
 
+interface StudentRecord {
+  docId: string;
+  email: string;
+  name?: string;
+  rollNumber?: string;
+  rollNo?: string;
+  status?: string;
+  tests?: { [key: string]: any };
+  results?: any;
+}
+
 const CURRENT_TEST_ID = 'architecture_construction_built_environment';
 const CURRENT_TEST_NAME = 'Architecture, Construction & Built Environment';
 
-const EMAIL_OPTIONS = Array.from({ length: 10 }, (_, i) => `veeru${i + 1}@gmail.com`);
-
 const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoading = false, serverErrors = {} }) => {
-  // Candidate Email
-  const [email, setEmail] = useState('');
-  const [attemptedEmails, setAttemptedEmails] = useState<string[]>([]);
+  // Dynamic student list from Firestore
+  const [studentsList, setStudentsList] = useState<StudentRecord[]>([]);
+  const [isLoadingStudents, setIsLoadingStudents] = useState<boolean>(true);
+
+  // Candidate Form Inputs
+  const [selectedEmail, setSelectedEmail] = useState('');
+  const [rollNumber, setRollNumber] = useState('');
   const [checkError, setCheckError] = useState<string>('');
   const [isChecking, setIsChecking] = useState<boolean>(false);
 
@@ -28,31 +41,43 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
   const [counsellorEmail, setCounsellorEmail] = useState('');
   const [board, setBoard] = useState('');
 
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [showMobileForm, setShowMobileForm] = useState(false);
 
-  // Fetch already attempted emails for THIS specific test from Firestore on mount
+  // Fetch all registered students from Firestore "students" collection on mount
   useEffect(() => {
-    const fetchAttemptedEmails = async () => {
+    const fetchStudents = async () => {
+      setIsLoadingStudents(true);
       try {
         const snapshot = await getDocs(collection(db, "students"));
-        const emails: string[] = [];
+        const list: StudentRecord[] = [];
         snapshot.forEach(docSnap => {
           const data = docSnap.data();
-          const docEmail = (data.email || docSnap.id || '').trim().toLowerCase();
-          // Check if this specific test has been attempted (or legacy single-result structure)
-          const hasAttemptedThisTest = Boolean(data.tests?.[CURRENT_TEST_ID] || (data.results && !data.tests));
-          if (docEmail && hasAttemptedThisTest) {
-            emails.push(docEmail);
+          const docEmail = (data.email || docSnap.id || '').trim();
+          if (docEmail) {
+            list.push({
+              docId: docSnap.id,
+              email: docEmail,
+              name: data.name || '',
+              rollNumber: data.rollNumber || data.rollNo || '',
+              rollNo: data.rollNo || data.rollNumber || '',
+              status: data.status,
+              tests: data.tests || {},
+              results: data.results
+            });
           }
         });
-        setAttemptedEmails(emails);
+
+        // Sort alphabetically by email
+        list.sort((a, b) => a.email.localeCompare(b.email));
+        setStudentsList(list);
       } catch (err) {
-        console.warn("Could not fetch attempted emails from database:", err);
+        console.warn("Could not fetch students from database:", err);
+      } finally {
+        setIsLoadingStudents(false);
       }
     };
 
-    fetchAttemptedEmails();
+    fetchStudents();
   }, []);
 
   useEffect(() => {
@@ -75,60 +100,87 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
     e.preventDefault();
     if (isLoading || isChecking) return;
 
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail) return;
+    const trimmedEmail = selectedEmail.trim();
+    const trimmedRoll = rollNumber.trim();
+
+    if (!trimmedEmail) {
+      setCheckError('Please select a student email address.');
+      return;
+    }
+
+    if (!trimmedRoll) {
+      setCheckError('Please enter your roll number.');
+      return;
+    }
 
     setIsChecking(true);
     setCheckError('');
 
-    // Check Firestore database to see if this student has already attempted this specific test
+    // Find student in our loaded list
+    const student = studentsList.find(s => s.email.toLowerCase() === trimmedEmail.toLowerCase());
+
+    if (!student) {
+      setCheckError('Selected email was not found in the student database.');
+      setIsChecking(false);
+      return;
+    }
+
+    // Verify Roll Number
+    const storedRoll = (student.rollNumber || student.rollNo || '').trim().toLowerCase();
+    const enteredRoll = trimmedRoll.toLowerCase();
+
+    const isRollMatching = storedRoll && (
+      enteredRoll === storedRoll ||
+      (!isNaN(Number(enteredRoll)) && !isNaN(Number(storedRoll)) && Number(enteredRoll) === Number(storedRoll))
+    );
+
+    if (!isRollMatching) {
+      setCheckError('Roll number does not match for the selected email. Please check your credentials and try again.');
+      setIsChecking(false);
+      return;
+    }
+
+    // Check if student has already completed this assessment
     try {
-      const studentDocRef = doc(db, "students", trimmedEmail.toLowerCase());
+      const studentDocRef = doc(db, "students", student.docId);
       const docSnap = await getDoc(studentDocRef);
 
       let isAlreadyTaken = false;
       if (docSnap.exists()) {
         const data = docSnap.data();
-        if (data.tests?.[CURRENT_TEST_ID] || data.results) {
+        if (data.tests?.[CURRENT_TEST_ID] || (data.results && !data.tests)) {
           isAlreadyTaken = true;
         }
-      }
-
-      // Also check fallback for any documents stored with auto-ID
-      if (!isAlreadyTaken) {
-        const q = query(collection(db, "students"), where("email", "==", trimmedEmail));
-        const snapshot = await getDocs(q);
-        snapshot.forEach(d => {
-          const data = d.data();
-          if (data.tests?.[CURRENT_TEST_ID] || data.results) {
-            isAlreadyTaken = true;
-          }
-        });
+      } else if (student.tests?.[CURRENT_TEST_ID] || (student.results && !student.tests)) {
+        isAlreadyTaken = true;
       }
 
       if (isAlreadyTaken) {
         setCheckError(`The email "${trimmedEmail}" has already completed the ${CURRENT_TEST_NAME} assessment.`);
-        if (!attemptedEmails.includes(trimmedEmail.toLowerCase())) {
-          setAttemptedEmails(prev => [...prev, trimmedEmail.toLowerCase()]);
-        }
         setIsChecking(false);
         return;
       }
     } catch (error) {
-      console.warn("Error verifying email in database:", error);
+      console.warn("Error verifying student status in database:", error);
     }
 
     setIsChecking(false);
 
     const user: User = {
-      name: trimmedEmail,
-      email: trimmedEmail,
+      docId: student.docId,
+      name: student.name || trimmedEmail.split('@')[0],
+      email: student.email,
+      rollNumber: student.rollNumber || student.rollNo || trimmedRoll,
+      rollNo: student.rollNo || student.rollNumber || trimmedRoll,
       school: schoolName || 'IACG',
     };
     onSubmit(user);
   };
 
-  const getError = (field: string) => errors[field] || serverErrors[field];
+  const selectedStudentObj = studentsList.find(s => s.email.toLowerCase() === selectedEmail.toLowerCase());
+  const isSelectedAttempted = selectedStudentObj 
+    ? Boolean(selectedStudentObj.tests?.[CURRENT_TEST_ID] || (selectedStudentObj.results && !selectedStudentObj.tests))
+    : false;
 
   return (
     <div className="min-h-screen flex w-full bg-white relative">
@@ -159,12 +211,12 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
             </div>
           </div>
 
-          {/* Heading - Increased Font Size */}
+          {/* Heading */}
           <h2 className="text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight text-white mb-5 leading-tight">
             Multi-Disciplinary <span className="text-[#FBBF24]">MCQ Assessment</span>
           </h2>
 
-          {/* Subtitle / Description - Student Focused */}
+          {/* Subtitle / Description */}
           <p className="text-sm md:text-base lg:text-[17px] text-gray-200 max-w-2xl mx-auto leading-relaxed text-center opacity-95">
             Online student examination and skill evaluation portal. Test your knowledge,<br className="hidden lg:inline" />
             {" "}conceptual clarity, and multidisciplinary reasoning across comprehensive<br className="hidden lg:inline" />
@@ -182,7 +234,7 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
         </div>
       </div>
 
-      {/* Right Side - Candidate Form (Email Dropdown) - 40% Width */}
+      {/* Right Side - Candidate Form (Email & Roll Number) - 40% Width */}
       <div className={`
           ${showMobileForm ? 'flex' : 'hidden md:flex'}
           w-full md:w-[40%] items-center justify-center p-6 md:p-10 lg:p-12 bg-gray-50 h-screen overflow-y-auto animate-fade-in
@@ -192,11 +244,14 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
             <h2 className="text-3xl font-bold text-brand-navy tracking-tight">
               Candidate Details
             </h2>
+            <p className="text-sm text-gray-500 mt-1.5">
+              Select your registered email and enter your roll number to access the assessment.
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
 
-            {/* Email Address Dropdown */}
+            {/* Email Address Dropdown (from Firebase) */}
             <div className="space-y-1.5">
               <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wide">
                 <Mail size={15} className="text-brand-navy" />
@@ -205,38 +260,66 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
               <div className="relative">
                 <select
                   required
-                  value={email}
+                  value={selectedEmail}
                   onChange={(e) => {
-                    setEmail(e.target.value);
+                    setSelectedEmail(e.target.value);
                     setCheckError('');
                   }}
-                  disabled={isLoading || isChecking}
+                  disabled={isLoading || isChecking || isLoadingStudents}
                   className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 outline-none text-sm focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/20 transition-all appearance-none cursor-pointer pr-10 font-medium"
                 >
-                  <option value="" disabled>-- Select Candidate Email --</option>
-                  {EMAIL_OPTIONS.map((em) => {
-                    const isAttempted = attemptedEmails.includes(em.toLowerCase());
+                  <option value="" disabled>
+                    {isLoadingStudents ? '-- Loading Registered Candidates... --' : '-- Select Candidate Email --'}
+                  </option>
+                  {studentsList.map((student) => {
+                    const isAttempted = Boolean(student.tests?.[CURRENT_TEST_ID] || (student.results && !student.tests));
                     return (
                       <option 
-                        key={em} 
-                        value={em} 
+                        key={student.docId || student.email} 
+                        value={student.email} 
                         disabled={isAttempted}
                         className={isAttempted ? "text-gray-400 bg-gray-100" : "text-gray-900"}
                       >
-                        {em} {isAttempted ? '— (Already Attempted)' : ''}
+                        {student.email} {student.name ? `(${student.name})` : ''} {isAttempted ? '— (Already Attempted)' : ''}
                       </option>
                     );
                   })}
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
-                  </svg>
+                  {isLoadingStudents ? (
+                    <Loader2 size={16} className="animate-spin text-brand-navy" />
+                  ) : (
+                    <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                      <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
+                    </svg>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Error Message when Email is already attempted */}
+            {/* Roll Number Input */}
+            <div className="space-y-1.5">
+              <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wide">
+                <Hash size={15} className="text-brand-navy" />
+                Roll Number
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  required
+                  value={rollNumber}
+                  onChange={(e) => {
+                    setRollNumber(e.target.value);
+                    setCheckError('');
+                  }}
+                  disabled={isLoading || isChecking}
+                  placeholder="Enter your Roll Number (e.g. 001, 002)"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 outline-none text-sm focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/20 transition-all font-medium placeholder-gray-400"
+                />
+              </div>
+            </div>
+
+            {/* Error Message */}
             {checkError && (
               <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg flex items-start gap-2.5 animate-fade-in shadow-sm">
                 <AlertCircle size={17} className="text-red-500 shrink-0 mt-0.5" />
@@ -250,18 +333,18 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
             <div className="pt-4">
               <button
                 type="submit"
-                disabled={isLoading || isChecking || (!!email && attemptedEmails.includes(email.toLowerCase()))}
-                className={`w-full bg-brand-navy text-white py-4 rounded-lg font-bold hover:bg-brand-navyLight transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-navy/30 hover:shadow-xl transform hover:-translate-y-0.5 text-base uppercase tracking-wider ${(isLoading || isChecking || (!!email && attemptedEmails.includes(email.toLowerCase()))) ? 'cursor-not-allowed opacity-75' : ''}`}
+                disabled={isLoading || isChecking || isLoadingStudents || isSelectedAttempted || !selectedEmail || !rollNumber.trim()}
+                className={`w-full bg-brand-navy text-white py-4 rounded-lg font-bold hover:bg-brand-navyLight transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-navy/30 hover:shadow-xl transform hover:-translate-y-0.5 text-base uppercase tracking-wider ${(isLoading || isChecking || isLoadingStudents || isSelectedAttempted || !selectedEmail || !rollNumber.trim()) ? 'cursor-not-allowed opacity-75' : ''}`}
               >
                 {isChecking ? (
                   <>
                     <Loader2 size={18} className="animate-spin" />
-                    Checking Database...
+                    Verifying Credentials...
                   </>
                 ) : isLoading ? (
                   <>
                     <Loader2 size={18} className="animate-spin" />
-                    Preparing MCQ Test...
+                    Preparing Assessment...
                   </>
                 ) : (
                   <>
