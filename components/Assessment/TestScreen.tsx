@@ -24,7 +24,23 @@ const TestScreen: React.FC<TestScreenProps> = ({ data, onComplete, isSubmitting 
 
     const totalQuestions = allQuestions.length;
     const answeredCount = Object.keys(answers).length;
-    const progressPercentage = Math.round((answeredCount / totalQuestions) * 100);
+    
+    // Dynamic progress calculation: increases smoothly along with time elapsed,
+    // and reaches the full question percentage upon clicking Next or completing questions
+    const timeElapsedInCurrentQuestion = QUESTION_TIMER_SECONDS - timeLeft;
+    const timeFraction = Math.min(Math.max(timeElapsedInCurrentQuestion / QUESTION_TIMER_SECONDS, 0), 1);
+
+    const currentProgressValue = isSubmitting 
+        ? totalQuestions 
+        : currentQuestionIndex >= 0 
+            ? currentQuestionIndex + timeFraction 
+            : 0;
+
+    const progressWidthExact = totalQuestions > 0 
+        ? Math.min((currentProgressValue / totalQuestions) * 100, 100) 
+        : 0;
+
+    const progressPercentage = Math.round(progressWidthExact);
 
     const isInstructions = currentQuestionIndex === -1;
     const currentQuestion = !isInstructions && currentQuestionIndex < totalQuestions ? allQuestions[currentQuestionIndex] : null;
@@ -106,8 +122,8 @@ const TestScreen: React.FC<TestScreenProps> = ({ data, onComplete, isSubmitting 
                     {/* Progress Bar Area - 96% WIDTH */}
                     <div className="w-full md:max-w-[96%] mx-auto bg-white/10 h-7 relative rounded-full overflow-hidden border border-white/10">
                         <div
-                            className="h-full bg-striped-gold flex items-center justify-center text-xs font-bold text-brand-navy transition-all duration-700 ease-out shadow-[0_0_20px_rgba(253,184,19,0.5)]"
-                            style={{ width: `${Math.max(progressPercentage, 0)}%` }}
+                            className="h-full bg-striped-gold flex items-center justify-center text-xs font-bold text-brand-navy transition-all duration-1000 ease-linear shadow-[0_0_20px_rgba(253,184,19,0.5)]"
+                            style={{ width: `${Math.max(progressWidthExact, 0)}%` }}
                         >
                             {progressPercentage > 0 && `${progressPercentage}%`}
                         </div>
@@ -118,7 +134,7 @@ const TestScreen: React.FC<TestScreenProps> = ({ data, onComplete, isSubmitting 
             {/* Main Content Area - Original 55% width */}
             <div className={`flex-1 w-full md:max-w-[55%] mx-auto px-4 ${isInstructions ? 'py-4 flex items-center justify-center' : 'py-8'}`}>
                 {isInstructions ? (
-                    <InstructionScreen onStart={handleNext} />
+                    <InstructionScreen onStart={handleNext} milestoneTitle={currentSectionTitle} />
                 ) : (
                     <>
                         {currentSectionTitle && (
@@ -149,8 +165,8 @@ const TestScreen: React.FC<TestScreenProps> = ({ data, onComplete, isSubmitting 
             {!isInstructions && (
                 <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-50">
                     <div className="w-full md:max-w-[55%] mx-auto flex justify-between items-center">
-                        <div className="text-xs text-gray-400 font-medium">
-                            {currentQuestionIndex >= 0 && `${answeredCount} of ${totalQuestions} answered`}
+                        <div className="text-xs text-gray-500 font-medium">
+                            {currentQuestionIndex >= 0 && `Question ${currentQuestionIndex + 1} of ${totalQuestions} (${answeredCount} answered)`}
                         </div>
                         <button
                             onClick={handleNext}

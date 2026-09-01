@@ -600,27 +600,733 @@ export const ARCHITECTURE_MCQ_BANK: Question[] = [
   },
 ];
 
+// Full bank of 50 MCQ questions on Soil to Sustainability / Agriculture, Environment & Sustainability
+// Source: Soil to Sustainability Booklet
+export const AGRICULTURE_SUSTAINABILITY_MCQ_BANK: Question[] = [
+  {
+    id: 'agri_q1',
+    text: 'Which statement best explains the main idea of sustainability?',
+    type: 'mcq',
+    options: [
+      'Producing as much as possible without considering natural resources',
+      'Stopping economic development to protect nature',
+      'Producing enough to meet human needs while protecting the resources needed for future production',
+      'Depending entirely on traditional farming methods',
+    ],
+    correctAnswer: 'Producing enough to meet human needs while protecting the resources needed for future production',
+    explanation: 'Sustainability means meeting human needs while protecting the land, water, climate and other systems that future production depends on.',
+  },
+  {
+    id: 'agri_q2',
+    text: 'Before mechanization, agricultural production was mainly limited by:',
+    type: 'mcq',
+    options: [
+      'Human labour and available farmland',
+      'Computers and satellites',
+      'International trade',
+      'Artificial intelligence',
+    ],
+    correctAnswer: 'Human labour and available farmland',
+    explanation: 'Before mechanization, farming depended heavily on available farmland and human labour.',
+  },
+  {
+    id: 'agri_q3',
+    text: 'Which development greatly increased agricultural production during the industrial farming period?',
+    type: 'mcq',
+    options: [
+      'Elimination of irrigation',
+      'Tractors, fertilizers and irrigation',
+      'Reduction of crop varieties',
+      'Manual harvesting',
+    ],
+    correctAnswer: 'Tractors, fertilizers and irrigation',
+    explanation: 'Tractors, synthetic fertilizers and irrigation greatly increased agricultural output and shifted earlier production limits.',
+  },
+  {
+    id: 'agri_q4',
+    text: 'Which of the following is a modern planetary limit?',
+    type: 'mcq',
+    options: [
+      'Lack of roads',
+      'Lack of smartphones',
+      'Declining literacy',
+      'Soil degradation',
+    ],
+    correctAnswer: 'Soil degradation',
+    explanation: 'Soil degradation is one of the environmental limits that can restrict long-term agricultural production.',
+  },
+  {
+    id: 'agri_q5',
+    text: 'Why did many early civilizations develop near major rivers?',
+    type: 'mcq',
+    options: [
+      'Rivers provided reliable water and supported agricultural surplus',
+      'Rivers prevented all environmental problems',
+      'Rivers eliminated the need for farming',
+      'Rivers were mainly used for tourism',
+    ],
+    correctAnswer: 'Rivers provided reliable water and supported agricultural surplus',
+    explanation: 'Reliable river water supported agriculture and created surpluses that allowed societies to develop specialized occupations.',
+  },
+  {
+    id: 'agri_q6',
+    text: 'Which river system is associated with ancient Mesopotamia?',
+    type: 'mcq',
+    options: [
+      'Nile',
+      'Indus',
+      'Tigris and Euphrates',
+      'Yangtze and Mekong',
+    ],
+    correctAnswer: 'Tigris and Euphrates',
+    explanation: 'Mesopotamia developed around the Tigris and Euphrates river system.',
+  },
+  {
+    id: 'agri_q7',
+    text: 'What happened to Mesopotamian soil after centuries of irrigation without adequate drainage?',
+    type: 'mcq',
+    options: [
+      'It became more fertile indefinitely',
+      'It became increasingly saline',
+      'It turned into forest',
+      'It completely lost all water',
+    ],
+    correctAnswer: 'It became increasingly saline',
+    explanation: 'When irrigation water evaporated without adequate drainage, salts accumulated in the soil and increased salinity.',
+  },
+  {
+    id: 'agri_q8',
+    text: 'Which crop became more important in southern Mesopotamia as soil salinity increased?',
+    type: 'mcq',
+    options: [
+      'Rice',
+      'Maize',
+      'Wheat',
+      'Barley',
+    ],
+    correctAnswer: 'Barley',
+    explanation: 'Barley is more salt-tolerant than wheat, so farmers increasingly shifted toward barley as salinity worsened.',
+  },
+  {
+    id: 'agri_q9',
+    text: 'What was a major strength of traditional farming systems in the Andes?',
+    type: 'mcq',
+    options: [
+      'Complete dependence on one crop',
+      'Heavy use of synthetic fertilizers',
+      'Crop diversity adapted to different conditions',
+      'Elimination of terraces',
+    ],
+    correctAnswer: 'Crop diversity adapted to different conditions',
+    explanation: 'Andean farmers used terraces and maintained many crop varieties suited to different altitudes, soils and frost risks.',
+  },
+  {
+    id: 'agri_q10',
+    text: 'According to the sustainability principle of traditional agriculture, diversity functioned as:',
+    type: 'mcq',
+    options: [
+      'A form of insurance',
+      'A source of pollution',
+      'A replacement for irrigation',
+      'A method of eliminating all risk',
+    ],
+    correctAnswer: 'A form of insurance',
+    explanation: 'Having many crop varieties reduced the chance that one pest, frost or climate event would destroy the entire harvest.',
+  },
+  {
+    id: 'agri_q11',
+    text: 'Traditional Asian wet-rice farming systems were notable because they:',
+    type: 'mcq',
+    options: [
+      'Required no water',
+      'Supported dense populations for long periods while recycling resources',
+      'Eliminated all labour requirements',
+      'Depended entirely on chemical pesticides',
+    ],
+    correctAnswer: 'Supported dense populations for long periods while recycling resources',
+    explanation: 'Wet-rice systems recycled water and integrated fish and ducks for pest control and nutrients, supporting long-term productivity.',
+  },
+  {
+    id: 'agri_q12',
+    text: 'What traditional practice was common in many pre-colonial Sub-Saharan African farming communities?',
+    type: 'mcq',
+    options: [
+      'Continuous cultivation without rest',
+      'Large-scale monoculture',
+      'Shifting cultivation with fallow periods',
+      'Indoor vertical farming',
+    ],
+    correctAnswer: 'Shifting cultivation with fallow periods',
+    explanation: 'Land was farmed for a period and then left fallow so soil fertility could recover naturally.',
+  },
+  {
+    id: 'agri_q13',
+    text: 'What major limitation did some traditional sustainable systems face?',
+    type: 'mcq',
+    options: [
+      'They were labour-intensive and difficult to scale rapidly',
+      'They produced too much food',
+      'They required nuclear energy',
+      'They depended on satellites',
+    ],
+    correctAnswer: 'They were labour-intensive and difficult to scale rapidly',
+    explanation: 'Traditional systems could be resilient but were often labour-intensive and could not rapidly increase output when populations grew quickly.',
+  },
+  {
+    id: 'agri_q14',
+    text: 'What happened when industrialization reached agriculture?',
+    type: 'mcq',
+    options: [
+      'Machines disappeared from farming',
+      'Agriculture became entirely manual',
+      'Farmers stopped using fertilizers',
+      'Tractors, synthetic fertilizers and modern plant breeding became important',
+    ],
+    correctAnswer: 'Tractors, synthetic fertilizers and modern plant breeding became important',
+    explanation: 'Industrialization brought machinery, synthetic fertilizers and modern plant breeding into farming, greatly increasing production.',
+  },
+  {
+    id: 'agri_q15',
+    text: 'What was one major cause of the Dust Bowl?',
+    type: 'mcq',
+    options: [
+      'Excessive rainfall',
+      'Mechanized over-ploughing combined with prolonged drought',
+      'Lack of wheat cultivation',
+      'Ocean pollution',
+    ],
+    correctAnswer: 'Mechanized over-ploughing combined with prolonged drought',
+    explanation: 'Mechanized over-ploughing removed native grassland that protected the soil, and prolonged drought then allowed severe wind erosion.',
+  },
+  {
+    id: 'agri_q16',
+    text: 'The Dust Bowl occurred primarily during which period?',
+    type: 'mcq',
+    options: [
+      '1730s',
+      '1830s',
+      '1930s',
+      '2030s',
+    ],
+    correctAnswer: '1930s',
+    explanation: 'The Dust Bowl was a major ecological and agricultural disaster in the United States during the 1930s.',
+  },
+  {
+    id: 'agri_q17',
+    text: 'What key lesson does the Dust Bowl illustrate?',
+    type: 'mcq',
+    options: [
+      'Mechanization always reduces risk',
+      'Machines can completely eliminate environmental limits',
+      'Drought has no connection with farming practices',
+      'Mechanization can multiply mistakes and environmental risks',
+    ],
+    correctAnswer: 'Mechanization can multiply mistakes and environmental risks',
+    explanation: 'Mechanization can increase output, but poor land-management decisions can also magnify environmental damage and risk.',
+  },
+  {
+    id: 'agri_q18',
+    text: 'Norman Borlaug is strongly associated with:',
+    type: 'mcq',
+    options: [
+      'High-yielding wheat varieties',
+      'Wind turbines',
+      'Vertical farming',
+      'Carbon trading',
+    ],
+    correctAnswer: 'High-yielding wheat varieties',
+    explanation: 'Norman Borlaug developed high-yielding, disease-resistant wheat varieties that became central to the Green Revolution.',
+  },
+  {
+    id: 'agri_q19',
+    text: 'The Green Revolution spread to India and Pakistan mainly during which period?',
+    type: 'mcq',
+    options: [
+      '1820s',
+      '1920s',
+      '1960s',
+      '1990s',
+    ],
+    correctAnswer: '1960s',
+    explanation: 'The new high-yield wheat technologies developed in Mexico in the 1940s spread to India and Pakistan by the 1960s.',
+  },
+  {
+    id: 'agri_q20',
+    text: 'Which combination helped increase agricultural yields during the Green Revolution?',
+    type: 'mcq',
+    options: [
+      'Less irrigation and fewer seeds',
+      'High-yield varieties, irrigation, fertilizers and pesticides',
+      'Only traditional farming',
+      'Only manual labour',
+    ],
+    correctAnswer: 'High-yield varieties, irrigation, fertilizers and pesticides',
+    explanation: 'The Green Revolution combined improved crop varieties with irrigation, synthetic fertilizers and pesticides.',
+  },
+  {
+    id: 'agri_q21',
+    text: 'One environmental consequence of the Green Revolution was:',
+    type: 'mcq',
+    options: [
+      'Complete elimination of farming',
+      'Increased forest cover everywhere',
+      'Disappearance of irrigation',
+      'Depleted aquifers and degraded soil in some regions',
+    ],
+    correctAnswer: 'Depleted aquifers and degraded soil in some regions',
+    explanation: 'Intensive groundwater use and heavy chemical inputs increased production but also contributed to resource depletion and soil problems in some regions.',
+  },
+  {
+    id: 'agri_q22',
+    text: "What happened to India's wheat harvest between 1965 and 1970?",
+    type: 'mcq',
+    options: [
+      'It rose from roughly 12.3 million tons to about 20 million tons',
+      'It fell from 20 million tons to 12.3 million tons',
+      'It remained unchanged',
+      'It fell below 5 million tons',
+    ],
+    correctAnswer: 'It rose from roughly 12.3 million tons to about 20 million tons',
+    explanation: 'The figures presented are approximately 12.3 million tons in 1965 and about 20 million tons in 1970.',
+  },
+  {
+    id: 'agri_q23',
+    text: 'The Aral Sea disaster was strongly connected to:',
+    type: 'mcq',
+    options: [
+      'Excessive fishing alone',
+      'River diversion for cotton irrigation',
+      'Volcanic activity',
+      'Rising sea levels',
+    ],
+    correctAnswer: 'River diversion for cotton irrigation',
+    explanation: 'Rivers feeding the Aral Sea were diverted to support large-scale cotton irrigation in Central Asia.',
+  },
+  {
+    id: 'agri_q24',
+    text: "Approximately how much of the Aral Sea's surface area was lost?",
+    type: 'mcq',
+    options: [
+      '10–15%',
+      '25–30%',
+      '85–90%',
+      '100%',
+    ],
+    correctAnswer: '85–90%',
+    explanation: 'The Aral Sea lost roughly 85–90% of its surface area, along with about 90% of its water volume.',
+  },
+  {
+    id: 'agri_q25',
+    text: 'What environmental problem resulted from the exposed Aral Sea seabed?',
+    type: 'mcq',
+    options: [
+      'Toxic dust containing salt and pesticide residues',
+      'Increased freshwater availability',
+      'Expansion of forests',
+      'Increased fish populations',
+    ],
+    correctAnswer: 'Toxic dust containing salt and pesticide residues',
+    explanation: 'The exposed seabed released salt and pesticide residues as dust, creating serious environmental problems.',
+  },
+  {
+    id: 'agri_q26',
+    text: 'Since the 1970s, Amazon deforestation has been strongly associated with:',
+    type: 'mcq',
+    options: [
+      'Nuclear power generation',
+      'Cattle ranching and soybean farming',
+      'Offshore wind farms',
+      'Rice terraces',
+    ],
+    correctAnswer: 'Cattle ranching and soybean farming',
+    explanation: 'Large areas of the Amazon have been cleared for cattle ranching and, increasingly, soybean farming.',
+  },
+  {
+    id: 'agri_q27',
+    text: 'Why is Amazon deforestation considered a global concern?',
+    type: 'mcq',
+    options: [
+      'The Amazon has no effect beyond Brazil',
+      'It only affects cattle prices',
+      'It influences carbon balances and rainfall patterns beyond national borders',
+      'It affects only tourism',
+    ],
+    correctAnswer: 'It influences carbon balances and rainfall patterns beyond national borders',
+    explanation: 'The Amazon plays a climate-regulating role, so its loss can affect carbon balances and rainfall beyond national borders.',
+  },
+  {
+    id: 'agri_q28',
+    text: 'The 1972 Limits to Growth report examined the relationship between:',
+    type: 'mcq',
+    options: [
+      'Population, industrial output, pollution and resource use',
+      'Sports, education and tourism',
+      'Banking and insurance only',
+      'Agriculture and entertainment',
+    ],
+    correctAnswer: 'Population, industrial output, pollution and resource use',
+    explanation: 'The modelling examined how population, industrial production, pollution and resource use interact on a finite planet.',
+  },
+  {
+    id: 'agri_q29',
+    text: 'What was the central warning of the Limits to Growth discussion?',
+    type: 'mcq',
+    options: [
+      'Resources are unlimited',
+      'Technology has no environmental consequences',
+      'Population growth should stop immediately',
+      'Growth that ignores environmental limits eventually encounters them',
+    ],
+    correctAnswer: 'Growth that ignores environmental limits eventually encounters them',
+    explanation: 'The key warning was that continued growth in resource use and pollution cannot ignore the physical limits of a finite planet.',
+  },
+  {
+    id: 'agri_q30',
+    text: "Treating land, water and air as 'free and infinite' eventually leads to:",
+    type: 'mcq',
+    options: [
+      'Guaranteed prosperity',
+      'Environmental and resource problems',
+      'Elimination of scarcity',
+      'Unlimited agricultural production',
+    ],
+    correctAnswer: 'Environmental and resource problems',
+    explanation: 'Environmental resources have limits and real costs, even when those costs are not immediately visible in market prices.',
+  },
+  {
+    id: 'agri_q31',
+    text: 'Which event in 1972 placed environmental protection prominently on the international political agenda?',
+    type: 'mcq',
+    options: [
+      'Kyoto Protocol',
+      'Paris Agreement',
+      'Stockholm Conference',
+      'Bretton Woods Conference',
+    ],
+    correctAnswer: 'Stockholm Conference',
+    explanation: 'The 1972 UN Conference on the Human Environment in Stockholm was a major early global environmental gathering.',
+  },
+  {
+    id: 'agri_q32',
+    text: 'The Paris Agreement was adopted at:',
+    type: 'mcq',
+    options: [
+      'COP3',
+      'COP11',
+      'COP18',
+      'COP21',
+    ],
+    correctAnswer: 'COP21',
+    explanation: 'The Paris Agreement was adopted by 195 Parties at COP21 in December 2015.',
+  },
+  {
+    id: 'agri_q33',
+    text: 'The Paris Agreement entered into force in:',
+    type: 'mcq',
+    options: [
+      '2015',
+      '2016',
+      '2018',
+      '2020',
+    ],
+    correctAnswer: '2016',
+    explanation: 'The agreement entered into force in November 2016.',
+  },
+  {
+    id: 'agri_q34',
+    text: 'Environmental justice mainly asks:',
+    type: 'mcq',
+    options: [
+      'Who should own every farm?',
+      'Who should control technology?',
+      'Who pays for shared environmental problems and who was responsible for creating them?',
+      'Who should produce the most food?',
+    ],
+    correctAnswer: 'Who pays for shared environmental problems and who was responsible for creating them?',
+    explanation: 'Environmental justice considers how environmental costs and responsibilities are distributed among people and countries.',
+  },
+  {
+    id: 'agri_q35',
+    text: 'Why can poorer communities be more vulnerable to climate impacts?',
+    type: 'mcq',
+    options: [
+      'They have more resources to adapt',
+      'They have fewer resources such as insurance and rebuilding capacity',
+      'They produce all global emissions',
+      'They have unlimited access to technology',
+    ],
+    correctAnswer: 'They have fewer resources such as insurance and rebuilding capacity',
+    explanation: 'Poorer communities and small farmers often have fewer financial and technological resources to adapt to climate shocks.',
+  },
+  {
+    id: 'agri_q36',
+    text: 'A circular economy emphasizes:',
+    type: 'mcq',
+    options: [
+      'Extracting, using and throwing away materials',
+      'Reusing materials instead of simply discarding them',
+      'Increasing waste generation',
+      'Ending all manufacturing',
+    ],
+    correctAnswer: 'Reusing materials instead of simply discarding them',
+    explanation: 'A circular economy aims to keep materials in use through reuse and other strategies rather than a simple take-make-dispose model.',
+  },
+  {
+    id: 'agri_q37',
+    text: "Germany's 'Energiewende' refers to:",
+    type: 'mcq',
+    options: [
+      'A major energy transition',
+      'A farming festival',
+      'A river restoration project',
+      'A food-export programme',
+    ],
+    correctAnswer: 'A major energy transition',
+    explanation: 'Energiewende refers to Germany\'s deliberate transition toward a different energy system, including major expansion of wind and solar.',
+  },
+  {
+    id: 'agri_q38',
+    text: 'Denmark developed a major renewable-energy strategy around:',
+    type: 'mcq',
+    options: [
+      'Coal',
+      'Nuclear power',
+      'Wind energy',
+      'Oil',
+    ],
+    correctAnswer: 'Wind energy',
+    explanation: 'Denmark built a strong wind-energy strategy, including offshore wind, because it has limited fossil-fuel resources and few major rivers.',
+  },
+  {
+    id: 'agri_q39',
+    text: "What important lesson does Germany's energy transition demonstrate?",
+    type: 'mcq',
+    options: [
+      'Energy transitions are always free',
+      'Energy transitions have real economic costs and trade-offs',
+      'Renewable energy requires no infrastructure',
+      'Coal regions are never affected',
+    ],
+    correctAnswer: 'Energy transitions have real economic costs and trade-offs',
+    explanation: 'Germany\'s experience shows that energy transitions require investment, infrastructure changes and difficult economic and political choices.',
+  },
+  {
+    id: 'agri_q40',
+    text: 'Costa Rica is presented as an example of leadership particularly in:',
+    type: 'mcq',
+    options: [
+      'Renewable electricity',
+      'Cotton irrigation',
+      'Coal mining',
+      'Industrial fishing',
+    ],
+    correctAnswer: 'Renewable electricity',
+    explanation: 'Costa Rica is highlighted for generating approximately 98.6% of its electricity from renewable sources in 2025.',
+  },
+  {
+    id: 'agri_q41',
+    text: 'Israel is highlighted for pioneering:',
+    type: 'mcq',
+    options: [
+      'Large-scale coal farming',
+      'Drip irrigation and water-efficient agriculture',
+      'Traditional river irrigation',
+      'Desert deforestation',
+    ],
+    correctAnswer: 'Drip irrigation and water-efficient agriculture',
+    explanation: 'Israel developed precise drip irrigation, wastewater reuse and desalination approaches to address severe water scarcity.',
+  },
+  {
+    id: 'agri_q42',
+    text: 'Vertical farming mainly attempts to solve which challenge?',
+    type: 'mcq',
+    options: [
+      'Lack of ocean resources',
+      'Lack of fossil fuels',
+      'Land and water constraints near densely populated areas',
+      'Lack of traditional crops',
+    ],
+    correctAnswer: 'Land and water constraints near densely populated areas',
+    explanation: 'Vertical farms use stacked growing systems and controlled environments to produce food with less land and water, often close to cities.',
+  },
+  {
+    id: 'agri_q43',
+    text: 'Which practice is associated with regenerative agriculture?',
+    type: 'mcq',
+    options: [
+      'Continuous intensive tillage',
+      'Eliminating crop rotation',
+      'Increasing soil degradation',
+      'Cover crops, reduced tillage and crop rotation',
+    ],
+    correctAnswer: 'Cover crops, reduced tillage and crop rotation',
+    explanation: 'Regenerative approaches can include cover crops, reduced tillage, crop rotation and livestock integration to improve soil health.',
+  },
+  {
+    id: 'agri_q44',
+    text: 'Which organization in the examples uses AI to provide farmers with crop diagnostics, weather information and market links?',
+    type: 'mcq',
+    options: [
+      'DeHaat',
+      'Bowery Farming',
+      'WayCool Foods',
+      'Apeel Sciences',
+    ],
+    correctAnswer: 'DeHaat',
+    explanation: 'DeHaat is presented as an Indian AgriTech platform using AI-enabled crop diagnostics, weather information and market connections.',
+  },
+  {
+    id: 'agri_q45',
+    text: 'What problem does WayCool Foods attempt to solve?',
+    type: 'mcq',
+    options: [
+      'Lack of wind turbines',
+      'Poor satellite coverage',
+      'Food-supply-chain inefficiencies and post-harvest waste',
+      'Lack of crop genetics',
+    ],
+    correctAnswer: 'Food-supply-chain inefficiencies and post-harvest waste',
+    explanation: 'WayCool uses data analytics and cold-chain logistics to build more direct farm-to-retail networks and reduce waste.',
+  },
+  {
+    id: 'agri_q46',
+    text: 'Which technology can help monitor crop health using thermal imaging?',
+    type: 'mcq',
+    options: [
+      'Drone and sensor systems',
+      'Coal-fired generators',
+      'Traditional ploughs',
+      'Manual granaries',
+    ],
+    correctAnswer: 'Drone and sensor systems',
+    explanation: 'Drone and sensor engineering can use thermal imaging and other data to monitor crop health and support precision farming.',
+  },
+  {
+    id: 'agri_q47',
+    text: 'Which career area combines farming with financial services and digital platforms?',
+    type: 'mcq',
+    options: [
+      'Agri-fintech',
+      'Wildlife tourism',
+      'Traditional masonry',
+      'Marine navigation',
+    ],
+    correctAnswer: 'Agri-fintech',
+    explanation: 'Agri-fintech combines agriculture with financial technology, including digital credit, lending and related services for farmers.',
+  },
+  {
+    id: 'agri_q48',
+    text: 'What is one reason some young people hesitate to choose traditional agriculture?',
+    type: 'mcq',
+    options: [
+      'It always guarantees a fixed monthly income',
+      'Seasonal and uncertain returns can appear less predictable than salaried employment',
+      'It requires no physical or financial risk',
+      'It has no connection to technology',
+    ],
+    correctAnswer: 'Seasonal and uncertain returns can appear less predictable than salaried employment',
+    explanation: 'The booklet identifies uncertain seasonal income, risk and limited awareness of modern agricultural careers as factors affecting youth interest.',
+  },
+  {
+    id: 'agri_q49',
+    text: 'What is one important future opportunity in modern agriculture?',
+    type: 'mcq',
+    options: [
+      'Combining technology with farming to improve productivity and resource efficiency',
+      'Removing all technology from farms',
+      'Increasing waste throughout the food chain',
+      'Using more water regardless of availability',
+    ],
+    correctAnswer: 'Combining technology with farming to improve productivity and resource efficiency',
+    explanation: 'Modern agriculture increasingly combines data, sensors, AI, biotechnology, automation and efficient resource use.',
+  },
+  {
+    id: 'agri_q50',
+    text: 'What is the best career-oriented way to think about future opportunities in sustainability?',
+    type: 'mcq',
+    options: [
+      'Choose only the most popular job today',
+      'Avoid problems involving natural resources',
+      'Identify future resource constraints and develop skills to help solve them',
+      'Focus only on academic marks',
+    ],
+    correctAnswer: 'Identify future resource constraints and develop skills to help solve them',
+    explanation: 'A sustainability-focused career approach is to identify major future constraints involving water, soil, energy, food and climate and build skills to address them.',
+  },
+];
+
+// Test Registry with metadata
+export const ASSESSMENT_MODULES: Record<string, { id: string; title: string; bank: Question[] }> = {
+  architecture_construction_built_environment: {
+    id: 'architecture_construction_built_environment',
+    title: 'Architecture, Construction & Built Environment',
+    bank: ARCHITECTURE_MCQ_BANK,
+  },
+  agriculture_environment_sustainability: {
+    id: 'agriculture_environment_sustainability',
+    title: 'Agriculture, Environment & Sustainability',
+    bank: AGRICULTURE_SUSTAINABILITY_MCQ_BANK,
+  },
+};
+
 /**
- * Pick `count` random questions from the full bank, shuffled
+ * Find module bank by exact key match
  */
-export function getRandomMCQQuestions(count: number = 20): Question[] {
-  const shuffled = [...ARCHITECTURE_MCQ_BANK].sort(() => Math.random() - 0.5);
+export function findAssessmentModule(testId: string, customTitle?: string) {
+  if (ASSESSMENT_MODULES[testId]) {
+    return {
+      id: testId,
+      title: customTitle || ASSESSMENT_MODULES[testId].title,
+      bank: ASSESSMENT_MODULES[testId].bank,
+    };
+  }
+
+  // Exact case-insensitive match
+  const matchKey = Object.keys(ASSESSMENT_MODULES).find(
+    k => k.toLowerCase() === (testId || '').toLowerCase().trim()
+  );
+  if (matchKey) {
+    return {
+      id: matchKey,
+      title: customTitle || ASSESSMENT_MODULES[matchKey].title,
+      bank: ASSESSMENT_MODULES[matchKey].bank,
+    };
+  }
+
+  const defaultMod = ASSESSMENT_MODULES.architecture_construction_built_environment;
+  return {
+    id: defaultMod.id,
+    title: customTitle || defaultMod.title,
+    bank: defaultMod.bank,
+  };
+}
+
+/**
+ * Pick `count` random questions from the specified bank, shuffled
+ */
+export function getRandomMCQQuestions(testId: string = 'architecture_construction_built_environment', count: number = 20): Question[] {
+  const module = findAssessmentModule(testId);
+  const shuffled = [...module.bank].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, Math.min(count, shuffled.length));
 }
 
 /**
  * Build an AssessmentData object from randomly selected MCQ questions
  */
-export function buildMCQAssessment(questionCount: number = 20) {
-  const questions = getRandomMCQQuestions(questionCount);
+export function buildMCQAssessment(testId: string = 'architecture_construction_built_environment', customTitle?: string, questionCount: number = 20) {
+  const module = findAssessmentModule(testId, customTitle);
+  const shuffled = [...module.bank].sort(() => Math.random() - 0.5);
+  const questions = shuffled.slice(0, Math.min(questionCount, shuffled.length));
   return {
-    milestoneId: 'architecture_construction_built_environment',
+    milestoneId: testId,
     sections: [
       {
-        id: 'mcq_section_1',
-        title: 'Architecture, Construction & Built Environment',
+        id: `mcq_section_${testId}`,
+        title: customTitle || module.title,
         questions,
       },
     ],
   };
 }
+
+

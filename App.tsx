@@ -47,10 +47,16 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [serverErrors, setServerErrors] = useState<{ [key: string]: string }>({});
 
-  const handleStudentDetailsSubmit = (studentUser: User) => {
+  const getActiveTestId = () => {
+    const searchParams = new URLSearchParams(window.location.search);
+    return searchParams.get('testId') || searchParams.get('test') || searchParams.get('assessment') || 'architecture_construction_built_environment';
+  };
+
+  const handleStudentDetailsSubmit = (studentUser: User, selectedTestId?: string, selectedTestName?: string) => {
     setUser(studentUser);
-    // Randomly pick 20 questions from the 50-question MCQ bank for this student
-    setAssessmentData(buildMCQAssessment(20));
+    const testId = selectedTestId || getActiveTestId();
+    // Randomly pick 20 questions from the MCQ bank with dynamic custom title
+    setAssessmentData(buildMCQAssessment(testId, selectedTestName, 20));
     setCurrentView(ViewState.ASSESSMENT);
   };
 

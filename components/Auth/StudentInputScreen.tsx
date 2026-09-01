@@ -1,13 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
-import { Mail, ArrowRight, Loader2, AlertCircle, Hash } from 'lucide-react';
+import { Mail, ArrowRight, Loader2, AlertCircle, Hash, BookOpen } from 'lucide-react';
 import { db } from '../../utils/firebase';
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 
+import { ASSESSMENT_MODULES } from '../../data/mcq_questions';
+
 interface StudentInputScreenProps {
-  onSubmit: (user: User) => void;
+  onSubmit: (user: User, testId: string, testName?: string) => void;
   isLoading?: boolean;
   serverErrors?: { [key: string]: string };
+}
+
+interface TestModuleItem {
+  id: string;
+  name: string;
+  description?: string;
+  category?: string;
+  order?: number;
+  isEnabled: boolean;
 }
 
 interface StudentRecord {
@@ -21,10 +32,12 @@ interface StudentRecord {
   results?: any;
 }
 
-const CURRENT_TEST_ID = 'architecture_construction_built_environment';
-const CURRENT_TEST_NAME = 'Architecture, Construction & Built Environment';
-
 const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoading = false, serverErrors = {} }) => {
+  // Enabled Assessment Modules strictly from Firestore (configured by Admin)
+  const [availableModules, setAvailableModules] = useState<TestModuleItem[]>([]);
+  const [isLoadingModules, setIsLoadingModules] = useState<boolean>(true);
+  const [selectedTestId, setSelectedTestId] = useState<string>('');
+
   // Dynamic student list from Firestore
   const [studentsList, setStudentsList] = useState<StudentRecord[]>([]);
   const [isLoadingStudents, setIsLoadingStudents] = useState<boolean>(true);
@@ -43,7 +56,61 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
 
   const [showMobileForm, setShowMobileForm] = useState(false);
 
-  // Fetch all registered students from Firestore "students" collection on mount
+  // 1. Fetch strictly enabled assessment test modules from Firestore "assessment_tests" on mount
+  useEffect(() => {
+    const fetchAssessmentModules = async () => {
+      setIsLoadingModules(true);
+      try {
+        const snapshot = await getDocs(collection(db, "assessment_tests"));
+        const modules: TestModuleItem[] = [];
+
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const docId = docSnap.id;
+          // STRICT CHECK: Only include if isEnabled === true in Firebase AND question bank is defined
+          if (data.isEnabled === true && ASSESSMENT_MODULES[docId]) {
+            const name = (data.name || ASSESSMENT_MODULES[docId].title).trim();
+            modules.push({
+              id: docId,
+              name: name,
+              description: data.description || '',
+              category: data.category || '',
+              order: typeof data.order === 'number' ? data.order : 999,
+              isEnabled: true
+            });
+          }
+        });
+
+        // Sort by order ascending
+        modules.sort((a, b) => (a.order || 999) - (b.order || 999));
+
+        setAvailableModules(modules);
+
+        // Check if URL specifies a test
+        const searchParams = new URLSearchParams(window.location.search);
+        const urlTest = searchParams.get('testId') || searchParams.get('test') || searchParams.get('assessment');
+        
+        if (urlTest && modules.some(m => m.id === urlTest)) {
+          setSelectedTestId(urlTest);
+        } else if (modules.length > 0) {
+          // Default to first enabled module from Firebase
+          setSelectedTestId(modules[0].id);
+        } else {
+          setSelectedTestId('');
+        }
+      } catch (err) {
+        console.warn("Could not fetch assessment modules from database:", err);
+        setAvailableModules([]);
+        setSelectedTestId('');
+      } finally {
+        setIsLoadingModules(false);
+      }
+    };
+
+    fetchAssessmentModules();
+  }, []);
+
+  // 2. Fetch all registered students from Firestore "students" collection on mount
   useEffect(() => {
     const fetchStudents = async () => {
       setIsLoadingStudents(true);
@@ -96,12 +163,21 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
     console.log("Params captured:", { sName, uCode, cEmail, sBoard });
   }, []);
 
+  const activeModule = availableModules.find(m => m.id === selectedTestId) 
+    || availableModules[0] 
+    || { id: selectedTestId, name: 'Multi-Disciplinary Assessment' };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLoading || isChecking) return;
 
     const trimmedEmail = selectedEmail.trim();
     const trimmedRoll = rollNumber.trim();
+
+    if (!selectedTestId) {
+      setCheckError('Please select an assessment test module.');
+      return;
+    }
 
     if (!trimmedEmail) {
       setCheckError('Please select a student email address.');
@@ -140,7 +216,7 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
       return;
     }
 
-    // Check if student has already completed this assessment
+    // Check if student has already completed this selected assessment
     try {
       const studentDocRef = doc(db, "students", student.docId);
       const docSnap = await getDoc(studentDocRef);
@@ -148,15 +224,15 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
       let isAlreadyTaken = false;
       if (docSnap.exists()) {
         const data = docSnap.data();
-        if (data.tests?.[CURRENT_TEST_ID] || (data.results && !data.tests)) {
+        if (data.tests?.[selectedTestId] || (data.results && !data.tests && selectedTestId === 'architecture_construction_built_environment')) {
           isAlreadyTaken = true;
         }
-      } else if (student.tests?.[CURRENT_TEST_ID] || (student.results && !student.tests)) {
+      } else if (student.tests?.[selectedTestId] || (student.results && !student.tests && selectedTestId === 'architecture_construction_built_environment')) {
         isAlreadyTaken = true;
       }
 
       if (isAlreadyTaken) {
-        setCheckError(`The email "${trimmedEmail}" has already completed the ${CURRENT_TEST_NAME} assessment.`);
+        setCheckError(`The email "${trimmedEmail}" has already completed the ${activeModule.name} assessment.`);
         setIsChecking(false);
         return;
       }
@@ -174,12 +250,12 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
       rollNo: student.rollNo || student.rollNumber || trimmedRoll,
       school: schoolName || 'IACG',
     };
-    onSubmit(user);
+    onSubmit(user, selectedTestId, activeModule.name);
   };
 
   const selectedStudentObj = studentsList.find(s => s.email.toLowerCase() === selectedEmail.toLowerCase());
   const isSelectedAttempted = selectedStudentObj 
-    ? Boolean(selectedStudentObj.tests?.[CURRENT_TEST_ID] || (selectedStudentObj.results && !selectedStudentObj.tests))
+    ? Boolean(selectedStudentObj.tests?.[selectedTestId] || (selectedStudentObj.results && !selectedStudentObj.tests && selectedTestId === 'architecture_construction_built_environment'))
     : false;
 
   return (
@@ -251,6 +327,55 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
 
           <form onSubmit={handleSubmit} className="space-y-5">
 
+            {/* Assessment Test Module Dropdown (Configured from Admin) */}
+            <div className="space-y-1.5">
+              <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wide">
+                <BookOpen size={15} className="text-brand-navy" />
+                Select Assessment Module
+              </label>
+              <div className="relative">
+                <select
+                  required
+                  value={selectedTestId}
+                  onChange={(e) => {
+                    setSelectedTestId(e.target.value);
+                    setCheckError('');
+                  }}
+                  disabled={isLoading || isChecking || isLoadingModules || availableModules.length === 0}
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 outline-none text-sm focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/20 transition-all appearance-none cursor-pointer pr-10 font-medium disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+                >
+                  {isLoadingModules ? (
+                    <option value="" disabled>-- Loading Assessment Modules from Admin... --</option>
+                  ) : availableModules.length === 0 ? (
+                    <option value="" disabled>-- No Modules Available (Disabled by Admin) --</option>
+                  ) : (
+                    availableModules.map((mod) => {
+                      const hasBank = Boolean(ASSESSMENT_MODULES[mod.id]);
+                      return (
+                        <option 
+                          key={mod.id} 
+                          value={mod.id}
+                          disabled={!hasBank}
+                          className={!hasBank ? "text-gray-400 bg-gray-100" : "text-gray-900"}
+                        >
+                          {mod.name} {mod.category ? `• ${mod.category}` : ''} {!hasBank ? '— (Content Coming Soon)' : ''}
+                        </option>
+                      );
+                    })
+                  )}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                  {isLoadingModules ? (
+                    <Loader2 size={16} className="animate-spin text-brand-navy" />
+                  ) : (
+                    <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                      <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
+                    </svg>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Email Address Dropdown (from Firebase) */}
             <div className="space-y-1.5">
               <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wide">
@@ -265,14 +390,14 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
                     setSelectedEmail(e.target.value);
                     setCheckError('');
                   }}
-                  disabled={isLoading || isChecking || isLoadingStudents}
-                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 outline-none text-sm focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/20 transition-all appearance-none cursor-pointer pr-10 font-medium"
+                  disabled={isLoading || isChecking || isLoadingStudents || isLoadingModules || availableModules.length === 0}
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 outline-none text-sm focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/20 transition-all appearance-none cursor-pointer pr-10 font-medium disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
                 >
                   <option value="" disabled>
                     {isLoadingStudents ? '-- Loading Registered Candidates... --' : '-- Select Candidate Email --'}
                   </option>
                   {studentsList.map((student) => {
-                    const isAttempted = Boolean(student.tests?.[CURRENT_TEST_ID] || (student.results && !student.tests));
+                    const isAttempted = Boolean(student.tests?.[selectedTestId] || (student.results && !student.tests && selectedTestId === 'architecture_construction_built_environment'));
                     return (
                       <option 
                         key={student.docId || student.email} 
@@ -312,9 +437,9 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
                     setRollNumber(e.target.value);
                     setCheckError('');
                   }}
-                  disabled={isLoading || isChecking}
+                  disabled={isLoading || isChecking || isLoadingModules || availableModules.length === 0}
                   placeholder="Enter your Roll Number (e.g. 001, 002)"
-                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 outline-none text-sm focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/20 transition-all font-medium placeholder-gray-400"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 outline-none text-sm focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/20 transition-all font-medium placeholder-gray-400 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -333,8 +458,8 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
             <div className="pt-4">
               <button
                 type="submit"
-                disabled={isLoading || isChecking || isLoadingStudents || isSelectedAttempted || !selectedEmail || !rollNumber.trim()}
-                className={`w-full bg-brand-navy text-white py-4 rounded-lg font-bold hover:bg-brand-navyLight transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-navy/30 hover:shadow-xl transform hover:-translate-y-0.5 text-base uppercase tracking-wider ${(isLoading || isChecking || isLoadingStudents || isSelectedAttempted || !selectedEmail || !rollNumber.trim()) ? 'cursor-not-allowed opacity-75' : ''}`}
+                disabled={isLoading || isChecking || isLoadingStudents || isLoadingModules || availableModules.length === 0 || isSelectedAttempted || !selectedEmail || !rollNumber.trim()}
+                className={`w-full bg-brand-navy text-white py-4 rounded-lg font-bold hover:bg-brand-navyLight transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-navy/30 hover:shadow-xl transform hover:-translate-y-0.5 text-base uppercase tracking-wider ${(isLoading || isChecking || isLoadingStudents || isLoadingModules || availableModules.length === 0 || isSelectedAttempted || !selectedEmail || !rollNumber.trim()) ? 'cursor-not-allowed opacity-75' : ''}`}
               >
                 {isChecking ? (
                   <>

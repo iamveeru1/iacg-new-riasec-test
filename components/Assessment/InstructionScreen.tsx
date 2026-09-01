@@ -6,7 +6,7 @@ interface InstructionScreenProps {
     milestoneTitle?: string;
 }
 
-const InstructionScreen: React.FC<InstructionScreenProps> = ({ onStart }) => {
+const InstructionScreen: React.FC<InstructionScreenProps> = ({ onStart, milestoneTitle = 'Multi-Disciplinary Assessment' }) => {
     return (
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 mt-1 animate-fade-in max-w-4xl mx-auto">
             {/* Compact Header */}
@@ -18,13 +18,13 @@ const InstructionScreen: React.FC<InstructionScreenProps> = ({ onStart }) => {
                     <h2 className="text-xl font-bold text-brand-navy tracking-tight">
                         Test Instructions
                     </h2>
-                    <p className="text-xs text-gray-500">Architecture, Construction & Built Environment · MCQ</p>
+                    <p className="text-xs text-gray-500">{milestoneTitle} · MCQ Assessment</p>
                 </div>
             </div>
 
             <div className="p-6 space-y-5">
                 <p className="text-gray-600 text-sm leading-relaxed">
-                    This is a <strong>Multiple Choice Question (MCQ)</strong> test based on the topic of <em>Architecture, Construction & Built Environment</em>.
+                    This is a <strong>Multiple Choice Question (MCQ)</strong> assessment on <em>{milestoneTitle}</em>.
                     Read each question carefully and select the best answer from the four options provided.
                 </p>
 
