@@ -11,6 +11,47 @@ import { collection, doc, setDoc, serverTimestamp, query, where, getDocs } from 
 import { signInAnonymously, onAuthStateChanged } from "firebase/auth";
 
 function App() {
+  // Security: Disable Right Click Inspect, View Source, and DevTools Shortcuts
+  useEffect(() => {
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      return false;
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Disable F12
+      if (e.key === 'F12' || e.keyCode === 123) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+
+      const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+
+      // Disable Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C, Ctrl+Shift+K (DevTools & Console)
+      if (isCtrlOrCmd && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c', 'K', 'k'].includes(e.key)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+
+      // Disable Ctrl+U (View Source) and Ctrl+S (Save)
+      if (isCtrlOrCmd && ['u', 'U', 's', 'S'].includes(e.key)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    };
+
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   useEffect(() => {
     let unsubscribe = () => {};
     try {
