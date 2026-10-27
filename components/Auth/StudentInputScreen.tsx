@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
 import { Mail, ArrowRight, Loader2, AlertCircle, Hash, BookOpen } from 'lucide-react';
 import { db } from '../../utils/firebase';
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 
 import { ASSESSMENT_MODULES } from '../../data/mcq_questions';
 
@@ -18,6 +18,7 @@ interface TestModuleItem {
   description?: string;
   category?: string;
   order?: number;
+  questionCount?: number;
   isEnabled: boolean;
 }
 
@@ -56,58 +57,143 @@ const StudentInputScreen: React.FC<StudentInputScreenProps> = ({ onSubmit, isLoa
 
   const [showMobileForm, setShowMobileForm] = useState(false);
 
-  // 1. Fetch strictly enabled assessment test modules from Firestore "assessment_tests" on mount
+  // 1. Fetch strictly enabled assessment test modules from Firestore "assessment_tests" in real-time
   useEffect(() => {
-    const fetchAssessmentModules = async () => {
-      setIsLoadingModules(true);
+    // Ensure newly added test documents exist in Firestore assessment_tests and are enabled
+    const ensureCustomTestDocs = async () => {
       try {
-        const snapshot = await getDocs(collection(db, "assessment_tests"));
-        const modules: TestModuleItem[] = [];
+        // 1. Pharma in India & Worldwide
+        const pharmaDocRef = doc(db, "assessment_tests", "pharma_in_india_worldwide");
+        const pharmaSnap = await getDoc(pharmaDocRef);
+        if (!pharmaSnap.exists()) {
+          await setDoc(pharmaDocRef, {
+            id: "pharma_in_india_worldwide",
+            name: "Pharma in India & Worldwide",
+            category: "Pharmaceutical & Healthcare Sciences",
+            description: "Assessment evaluating pharmaceutical science, medicine development, generics, APIs, regulation, and global pharma dynamics.",
+            docxFilename: "50_MCQ_Pharma_In_India_Worldwide.docx",
+            isEnabled: true,
+            order: 20,
+            questionCount: 50,
+            updatedAt: new Date().toISOString()
+          });
+          console.log("Document pharma_in_india_worldwide created in Firestore assessment_tests.");
+        } else if (!pharmaSnap.data()?.isEnabled) {
+          await setDoc(pharmaDocRef, { isEnabled: true, updatedAt: new Date().toISOString() }, { merge: true });
+        }
+
+        // 2. Interdisciplinary & New-Age Careers
+        const interDocRef = doc(db, "assessment_tests", "interdisciplinary_new_age_careers");
+        const interSnap = await getDoc(interDocRef);
+        if (!interSnap.exists()) {
+          await setDoc(interDocRef, {
+            id: "interdisciplinary_new_age_careers",
+            name: "Interdisciplinary & New-Age Careers",
+            category: "Interdisciplinary Studies",
+            description: "Assessment evaluating interdisciplinary thinking, T-shaped/comb-shaped skills, AI product roles, climate tech, GIS, digital public infrastructure, and future career pathways.",
+            docxFilename: "50_MCQ_Interdisciplinary_New_Age_Careers.docx",
+            isEnabled: true,
+            order: 21,
+            questionCount: 50,
+            updatedAt: new Date().toISOString()
+          });
+          console.log("Document interdisciplinary_new_age_careers created in Firestore assessment_tests.");
+        } else if (!interSnap.data()?.isEnabled) {
+          await setDoc(interDocRef, { isEnabled: true, updatedAt: new Date().toISOString() }, { merge: true });
+        }
+      } catch (err) {
+        console.warn("Could not ensure custom test documents in Firestore:", err);
+      }
+    };
+    ensureCustomTestDocs();
+
+    setIsLoadingModules(true);
+    let unsubscribe = () => {};
+
+    try {
+      unsubscribe = onSnapshot(collection(db, "assessment_tests"), (snapshot) => {
+        const enabledList: TestModuleItem[] = [];
 
         snapshot.forEach(docSnap => {
           const data = docSnap.data();
           const docId = docSnap.id;
+          const bankExists = Boolean(ASSESSMENT_MODULES[docId]);
+          const name = (data.name || (bankExists ? ASSESSMENT_MODULES[docId].title : docId)).trim();
+          
           // STRICT CHECK: Only include if isEnabled === true in Firebase AND question bank is defined
-          if (data.isEnabled === true && ASSESSMENT_MODULES[docId]) {
-            const name = (data.name || ASSESSMENT_MODULES[docId].title).trim();
-            modules.push({
+          if (data.isEnabled === true && bankExists) {
+            enabledList.push({
               id: docId,
               name: name,
               description: data.description || '',
               category: data.category || '',
               order: typeof data.order === 'number' ? data.order : 999,
+              questionCount: typeof data.questionCount === 'number' ? data.questionCount : ASSESSMENT_MODULES[docId].bank.length,
               isEnabled: true
             });
           }
         });
 
         // Sort by order ascending
-        modules.sort((a, b) => (a.order || 999) - (b.order || 999));
+        enabledList.sort((a, b) => (a.order || 999) - (b.order || 999));
 
-        setAvailableModules(modules);
+        setAvailableModules(enabledList);
 
-        // Check if URL specifies a test
-        const searchParams = new URLSearchParams(window.location.search);
-        const urlTest = searchParams.get('testId') || searchParams.get('test') || searchParams.get('assessment');
-        
-        if (urlTest && modules.some(m => m.id === urlTest)) {
-          setSelectedTestId(urlTest);
-        } else if (modules.length > 0) {
-          // Default to first enabled module from Firebase
-          setSelectedTestId(modules[0].id);
-        } else {
-          setSelectedTestId('');
-        }
-      } catch (err) {
-        console.warn("Could not fetch assessment modules from database:", err);
-        setAvailableModules([]);
-        setSelectedTestId('');
-      } finally {
+        // Keep selection synced with active URL test or first enabled module
+        setSelectedTestId(prev => {
+          const searchParams = new URLSearchParams(window.location.search);
+          const urlTest = searchParams.get('testId') || searchParams.get('test') || searchParams.get('assessment');
+          if (urlTest && enabledList.some(m => m.id === urlTest)) {
+            return urlTest;
+          }
+          if (prev && enabledList.some(m => m.id === prev)) {
+            return prev;
+          }
+          return enabledList.length > 0 ? enabledList[0].id : '';
+        });
+
         setIsLoadingModules(false);
-      }
-    };
+      }, (err) => {
+        console.warn("Real-time snapshot listener error (falling back to getDocs):", err);
+        // Fallback to one-time query
+        getDocs(collection(db, "assessment_tests")).then(snapshot => {
+          const enabledList: TestModuleItem[] = [];
+          snapshot.forEach(docSnap => {
+            const data = docSnap.data();
+            const docId = docSnap.id;
+            const bankExists = Boolean(ASSESSMENT_MODULES[docId]);
+            if (data.isEnabled === true && bankExists) {
+              const name = (data.name || ASSESSMENT_MODULES[docId].title).trim();
+              enabledList.push({
+                id: docId,
+                name: name,
+                description: data.description || '',
+                category: data.category || '',
+                order: typeof data.order === 'number' ? data.order : 999,
+                questionCount: typeof data.questionCount === 'number' ? data.questionCount : ASSESSMENT_MODULES[docId].bank.length,
+                isEnabled: true
+              });
+            }
+          });
+          enabledList.sort((a, b) => (a.order || 999) - (b.order || 999));
+          setAvailableModules(enabledList);
+          if (enabledList.length > 0) setSelectedTestId(enabledList[0].id);
+        }).catch(fallbackErr => {
+          console.warn("Fallback query error:", fallbackErr);
+        }).finally(() => {
+          setIsLoadingModules(false);
+        });
+      });
+    } catch (e) {
+      console.warn("Could not initiate Firestore onSnapshot:", e);
+      setIsLoadingModules(false);
+    }
 
-    fetchAssessmentModules();
+    return () => {
+      try {
+        unsubscribe();
+      } catch (e) {}
+    };
   }, []);
 
   // 2. Fetch all registered students from Firestore "students" collection on mount
